@@ -261,6 +261,20 @@ function Widget({ chatbotId }: { chatbotId: string }) {
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  // Session state
+  const [sessionId, setSessionId] = useState('')
+
+  // Initialize session on mount
+  useEffect(() => {
+    const storageKey = `sitebot_session_${chatbotId}`
+    let storedSession = localStorage.getItem(storageKey)
+    if (!storedSession) {
+      storedSession = uuidv4()
+      localStorage.setItem(storageKey, storedSession)
+    }
+    setSessionId(storedSession)
+  }, [chatbotId])
+
   // Contact form state
   const [formData, setFormData] = useState({ email: '', phone: '', message: '' })
   const [formLoading, setFormLoading] = useState(false)
@@ -289,6 +303,7 @@ function Widget({ chatbotId }: { chatbotId: string }) {
         body: JSON.stringify({
           messages: apiMessages,
           chatbotId,
+          sessionId,
           source: 'widget',
         }),
       })
@@ -321,7 +336,7 @@ function Widget({ chatbotId }: { chatbotId: string }) {
     }
   }
 
-  const handleSubmit = async (e: Event) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault()
     await sendMessage(input)
   }
@@ -335,7 +350,7 @@ function Widget({ chatbotId }: { chatbotId: string }) {
     }
   }
 
-  const handleFormSubmit = async (e: Event) => {
+  const handleFormSubmit = async (e: any) => {
     e.preventDefault()
     if (!formData.email.trim()) return
 

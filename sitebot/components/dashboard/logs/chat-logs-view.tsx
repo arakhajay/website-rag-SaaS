@@ -5,8 +5,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { getChatSessions, getChatMessages } from '@/app/actions/chat-logs'
-import { MessageSquare, Clock, Globe, Monitor } from 'lucide-react'
+import { MessageSquare, Clock, Globe, Monitor, Trash2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { clearChatLogs } from '@/app/actions/chat-logs'
+import { useRouter } from 'next/navigation'
 
 interface Session {
     id: string
@@ -30,6 +44,18 @@ export function ChatLogsView({ chatbotId }: { chatbotId: string }) {
     const [messages, setMessages] = useState<Message[]>([])
     const [loading, setLoading] = useState(true)
     const [messagesLoading, setMessagesLoading] = useState(false)
+    const router = useRouter()
+    const [isClearing, setIsClearing] = useState(false)
+
+    const handleClearLogs = async () => {
+        setIsClearing(true)
+        await clearChatLogs(chatbotId)
+        setSessions([])
+        setSelectedSession(null)
+        setMessages([])
+        setIsClearing(false)
+        router.refresh()
+    }
 
     // Fetch sessions on load
     useEffect(() => {
@@ -87,6 +113,29 @@ export function ChatLogsView({ chatbotId }: { chatbotId: string }) {
                             <Badge variant="secondary" className="ml-auto">
                                 {sessions.length}
                             </Badge>
+                        )}
+                        {sessions.length > 0 && (
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 ml-2 text-muted-foreground hover:text-destructive" disabled={isClearing}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Clear all chat logs?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This action cannot be undone. This will permanently delete all conversation history for this chatbot.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={handleClearLogs} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                            {isClearing ? 'Clearing...' : 'Clear All'}
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                         )}
                     </CardTitle>
                 </CardHeader>
@@ -171,8 +220,8 @@ export function ChatLogsView({ chatbotId }: { chatbotId: string }) {
                                     >
                                         <div
                                             className={`max-w-[80%] rounded-lg px-4 py-3 ${msg.role === 'user'
-                                                    ? 'bg-primary text-primary-foreground'
-                                                    : 'bg-muted'
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'bg-muted'
                                                 }`}
                                         >
                                             {msg.role === 'assistant' ? (
@@ -184,8 +233,8 @@ export function ChatLogsView({ chatbotId }: { chatbotId: string }) {
                                             )}
                                             <div
                                                 className={`text-xs mt-2 ${msg.role === 'user'
-                                                        ? 'text-primary-foreground/70'
-                                                        : 'text-muted-foreground'
+                                                    ? 'text-primary-foreground/70'
+                                                    : 'text-muted-foreground'
                                                     }`}
                                             >
                                                 {new Date(msg.created_at).toLocaleTimeString()}

@@ -110,3 +110,20 @@ export async function getChatMessages(dbSessionId: string) {
 
     return data || []
 }
+
+// Clear all chat logs for a chatbot
+export async function clearChatLogs(chatbotId: string) {
+    const supabase = createAdminClient()
+
+    const { error } = await supabase
+        .from('chat_sessions')
+        .delete()
+        .eq('chatbot_id', chatbotId)
+
+    if (error) {
+        console.error('[ChatLogs] Error clearing logs:', error)
+        return { success: false, error: error.message }
+    }
+
+    return { success: true }
+}
