@@ -81,7 +81,7 @@ export function Sidebar() {
             <div className="p-4 border-b h-16 flex items-center">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="w-full justify-between font-semibold text-lg px-2 hover:bg-muted/50">
+                        <Button variant="ghost" className="w-full justify-between font-semibold text-lg px-2 hover:bg-muted/50" suppressHydrationWarning>
                             <span className="flex items-center gap-2">
                                 <div className="h-6 w-6 rounded bg-primary/20 flex items-center justify-center">
                                     <Bot className="h-4 w-4 text-primary" />

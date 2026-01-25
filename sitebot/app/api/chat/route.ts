@@ -4,7 +4,7 @@ import { Pinecone } from '@pinecone-database/pinecone'
 import { OpenAIEmbeddings } from '@langchain/openai'
 import { generateAndRunSQL } from '@/lib/sql-agent'
 import { logInfo, logError } from '@/lib/logger'
-import { getOrCreateChatSession, logChatMessage } from '@/app/actions/chat-logs'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30
@@ -21,6 +21,74 @@ export async function OPTIONS() {
     return new Response(null, { status: 204, headers: corsHeaders })
 }
 
+// Helper: Get or create chat session (inline, not server action)
+async function getOrCreateChatSessionDirect(
+    chatbotId: string,
+    sessionId: string,
+    source: string = 'widget'
+) {
+    try {
+        const supabase = createAdminClient()
+
+        // Check if session exists
+        const { data: existingSession } = await supabase
+            .from('chat_sessions')
+            .select('id')
+            .eq('chatbot_id', chatbotId)
+            .eq('session_id', sessionId)
+            .single()
+
+        if (existingSession) {
+            await supabase
+                .from('chat_sessions')
+                .update({ updated_at: new Date().toISOString() })
+                .eq('id', existingSession.id)
+            return existingSession.id
+        }
+
+        // Create new session
+        const { data: newSession, error } = await supabase
+            .from('chat_sessions')
+            .insert({
+                chatbot_id: chatbotId,
+                session_id: sessionId,
+                source,
+            })
+            .select('id')
+            .single()
+
+        if (error) {
+            console.error('[ChatLogs] Error creating session:', error)
+            return null
+        }
+
+        return newSession.id
+    } catch (e) {
+        console.error('[ChatLogs] Session error:', e)
+        return null
+    }
+}
+
+// Helper: Log chat message (inline)
+async function logChatMessageDirect(
+    dbSessionId: string,
+    role: 'user' | 'assistant',
+    content: string
+) {
+    try {
+        const supabase = createAdminClient()
+        await supabase
+            .from('chat_messages')
+            .insert({
+                session_id: dbSessionId,
+                role,
+                content,
+            })
+    } catch (e) {
+        console.error('[ChatLogs] Message log error:', e)
+    }
+}
+
 export async function POST(req: Request) {
     try {
         console.log('[ChatRoute] Received Request')
@@ -30,7 +98,7 @@ export async function POST(req: Request) {
 
         if (!chatbotId) {
             console.error('[ChatRoute] Missing Chatbot ID')
-            return new Response('Chatbot ID required', { status: 400 })
+            return new Response('Chatbot ID required', { status: 400, headers: corsHeaders })
         }
 
         const lastMessage = messages[messages.length - 1]
@@ -49,55 +117,65 @@ export async function POST(req: Request) {
                 const pinecone = new Pinecone()
                 const index = pinecone.index(process.env.PINECONE_INDEX!)
 
-                const queryResponse = await index.query({
+                const results = await index.query({
                     vector,
-                    topK: 4,
-                    filter: { chatbotId },
+                    topK: 3,
                     includeMetadata: true,
+                    filter: { chatbotId },
                 })
-                console.log('[Chat] Vector Matches:', queryResponse.matches.length)
-
-                return queryResponse.matches
-                    .map((match) => match.metadata?.content)
-                    .join('\n\n')
-            } catch (e: any) {
-                console.error('[Chat] Vector Search Error:', e.message)
-                logError('ChatRoute-Vector', e)
-                return '' // Fail gracefully
+                console.log('[Chat] Vector results found:', results.matches?.length || 0)
+                // Fix: ingest.ts stores in 'content', verify fallback to 'text'
+                return results.matches?.map(match => match.metadata?.content || match.metadata?.text || '').join('\n\n') || ''
+            } catch (e) {
+                console.error('[Chat] Vector search error:', e)
+                return ''
             }
         })()
 
-        // 2. SQL Search (Hybrid)
+        // 2. SQL Agent Search
         const sqlPromise = (async () => {
             try {
-                console.log('[Chat] Starting SQL Search')
-                return await generateAndRunSQL(chatbotId, userQuery)
-            } catch (e: any) {
-                console.error('[Chat] SQL Search Error:', e.message)
-                // logError('ChatRoute-SQL', e) // Less critical if just "function missing"
-                return null // Fail gracefully
+                console.log('[Chat] Starting SQL Search:', userQuery)
+                const sqlResult = await generateAndRunSQL(chatbotId, userQuery)
+                console.log('[Chat] SQL result:', sqlResult ? 'found' : 'none')
+                return sqlResult || ''
+            } catch (e) {
+                console.error('[Chat] SQL search error:', e)
+                return ''
             }
         })()
 
-        const [vectorContext, sqlResult] = await Promise.all([vectorPromise, sqlPromise])
+        // 3. Chat logging (don't await - fire and forget)
+        const loggingPromise = (async () => {
+            try {
+                const dbSessionId = await getOrCreateChatSessionDirect(chatbotId, sessionId, source)
+                if (dbSessionId) {
+                    await logChatMessageDirect(dbSessionId, 'user', userQuery)
+                }
+                return dbSessionId
+            } catch (e) {
+                console.error('[Chat] Logging error:', e)
+                return null
+            }
+        })()
 
-        // 3. Construct Final Context
-        let combinedContext = `VECTOR CONTEXT (Unstructured):\n${vectorContext}`
+        // Wait for search results
+        const [vectorContext, sqlContext] = await Promise.all([vectorPromise, sqlPromise])
 
-        if (sqlResult) {
-            combinedContext += `\n\nSQL CONTEXT (Structured Data Results):\n${sqlResult}`
+        // Combine context
+        let combinedContext = ''
+        if (vectorContext) {
+            combinedContext += `**From Documents:**\n${vectorContext}\n\n`
+        }
+        if (sqlContext) {
+            combinedContext += `**From Structured Data:**\n${sqlContext}`
         }
 
-        // 4. Generate Response
-        const systemPrompt = `You are a helpful AI assistant for a website. You have access to knowledge from multiple sources.
+        if (!combinedContext) {
+            combinedContext = 'No relevant information found in the knowledge base.'
+        }
 
-**FORMATTING RULES (IMPORTANT):**
-- Use **bold** for emphasis and key terms
-- Use bullet points or numbered lists for multiple items
-- Use tables when presenting structured data with multiple fields
-- Use clear headings (## or ###) to organize longer responses
-- Keep responses concise and well-organized
-- Use line breaks between sections for readability
+        const systemPrompt = `You are a helpful AI assistant. Answer questions based ONLY on the following context.
 
 **CONTEXT:**
 ${combinedContext}
@@ -111,11 +189,8 @@ ${combinedContext}
 
         logInfo('ChatRoute', `Generating response for: ${userQuery}`)
 
-        // Log conversation (async, don't block response)
-        const dbSessionId = await getOrCreateChatSession(chatbotId, sessionId, source)
-        if (dbSessionId) {
-            await logChatMessage(dbSessionId, 'user', userQuery)
-        }
+        // Get session ID for logging
+        const dbSessionId = await loggingPromise
 
         const result = await streamText({
             model: openai('gpt-4o'),
@@ -124,7 +199,7 @@ ${combinedContext}
             onFinish: async ({ text }) => {
                 // Log AI response after streaming completes
                 if (dbSessionId && text) {
-                    await logChatMessage(dbSessionId, 'assistant', text)
+                    await logChatMessageDirect(dbSessionId, 'assistant', text)
                 }
             }
         })
