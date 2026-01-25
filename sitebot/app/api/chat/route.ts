@@ -8,6 +8,18 @@ import { logInfo, logError } from '@/lib/logger'
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30
 
+// CORS headers for widget cross-origin requests
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+}
+
+// Handle preflight requests
+export async function OPTIONS() {
+    return new Response(null, { status: 204, headers: corsHeaders })
+}
+
 export async function POST(req: Request) {
     try {
         console.log('[ChatRoute] Received Request')
@@ -102,11 +114,20 @@ ${combinedContext}
             system: systemPrompt,
             messages,
         })
-        return result.toTextStreamResponse()
+        const response = result.toTextStreamResponse()
+        // Add CORS headers to streaming response
+        const corsResponse = new Response(response.body, {
+            status: response.status,
+            headers: {
+                ...Object.fromEntries(response.headers.entries()),
+                ...corsHeaders,
+            },
+        })
+        return corsResponse
 
     } catch (e: any) {
         console.error('[ChatRoute] Critical Error:', e)
         logError('ChatRoute-Critical', e)
-        return new Response(`AI Error: ${e.message}`, { status: 500 })
+        return new Response(`AI Error: ${e.message}`, { status: 500, headers: corsHeaders })
     }
 }
