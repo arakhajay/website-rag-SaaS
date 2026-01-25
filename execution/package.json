@@ -1,0 +1,24 @@
+{
+  "name": "execution",
+  "version": "1.0.0",
+  "description": "This directory acts as **Layer 3: Execution** in the 3-Layer Architecture.",
+  "main": "check-apis.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@pinecone-database/pinecone": "^6.1.4",
+    "@supabase/supabase-js": "^2.91.1",
+    "dotenv": "^17.2.3",
+    "openai": "^6.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

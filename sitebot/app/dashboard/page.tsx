@@ -9,23 +9,8 @@ import { Bot, Link as LinkIcon, Calendar } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function DashboardPage() {
-    const supabase = await createClient()
-
-    let {
-        data: { user },
-    } = await supabase.auth.getUser()
-
-    // Bypassed for testing
-    /*
-    if (!user) {
-        return redirect('/login')
-    }
-    */
-
-    const { data: chatbots } = await supabase
-        .from('chatbots')
-        .select('*')
-        .order('created_at', { ascending: false })
+    const { getChatbots } = await import('@/app/actions/chatbot')
+    const { chatbots } = await getChatbots()
 
     return (
         <div className="space-y-6">
@@ -47,7 +32,7 @@ export default async function DashboardPage() {
                 <h3 className="text-xl font-semibold">Your Chatbots</h3>
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {chatbots?.map((bot) => (
-                        <Link key={bot.id} href={`/dashboard/chatbot/${bot.id}`}>
+                        <Link key={bot.id} href={`/dashboard/chatbot/${bot.id}/training`}>
                             <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium">
