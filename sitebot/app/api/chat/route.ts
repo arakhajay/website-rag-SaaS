@@ -4,6 +4,7 @@ import { Pinecone } from '@pinecone-database/pinecone'
 import { OpenAIEmbeddings } from '@langchain/openai'
 import { generateAndRunSQL } from '@/lib/sql-agent'
 import { logInfo, logError } from '@/lib/logger'
+import { getOrCreateChatSession, logChatMessage } from '@/app/actions/chat-logs'
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30
@@ -24,7 +25,7 @@ export async function POST(req: Request) {
     try {
         console.log('[ChatRoute] Received Request')
         const body = await req.json()
-        const { messages, chatbotId } = body
+        const { messages, chatbotId, sessionId = `session_${Date.now()}`, source = 'widget' } = body
         console.log(`[ChatRoute] ChatbotId: ${chatbotId}, UserQuery: ${messages?.[messages.length - 1]?.content}`)
 
         if (!chatbotId) {
@@ -109,10 +110,23 @@ ${combinedContext}
 - Be conversational but professional`
 
         logInfo('ChatRoute', `Generating response for: ${userQuery}`)
+
+        // Log conversation (async, don't block response)
+        const dbSessionId = await getOrCreateChatSession(chatbotId, sessionId, source)
+        if (dbSessionId) {
+            await logChatMessage(dbSessionId, 'user', userQuery)
+        }
+
         const result = await streamText({
             model: openai('gpt-4o'),
             system: systemPrompt,
             messages,
+            onFinish: async ({ text }) => {
+                // Log AI response after streaming completes
+                if (dbSessionId && text) {
+                    await logChatMessage(dbSessionId, 'assistant', text)
+                }
+            }
         })
         const response = result.toTextStreamResponse()
         // Add CORS headers to streaming response
