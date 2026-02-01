@@ -12,7 +12,8 @@ import {
     Link as LinkIcon,
     ChevronDown,
     Bot,
-    LogOut
+    LogOut,
+    Share2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -46,6 +47,7 @@ export function Sidebar() {
             baseItems.push(
                 { name: 'Content & Training', href: `/dashboard/chatbot/${currentChatbotId}/training`, icon: FileText },
                 { name: 'Bot Settings', href: `/dashboard/chatbot/${currentChatbotId}/settings`, icon: Settings },
+                { name: 'Connect', href: `/dashboard/chatbot/${currentChatbotId}/connect`, icon: Share2 },
                 { name: 'Chat Logs', href: `/dashboard/chatbot/${currentChatbotId}/logs`, icon: MessageSquare },
             )
         } else {

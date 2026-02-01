@@ -151,7 +151,7 @@ export function DataSourcesManager({ chatbotId }: { chatbotId: string }) {
                                         id="file-upload"
                                         type="file"
                                         multiple
-                                        accept=".pdf,.txt,.md"
+                                        accept=".pdf,.txt,.md,.doc,.docx"
                                         onChange={(e) => setFiles(e.target.files)}
                                     />
                                 </div>

@@ -84,3 +84,44 @@
 [2026-01-25T09:29:37.373Z] [ChatRoute] INFO: Generating response for: What services do you provide?
 [2026-01-25T10:07:06.575Z] [ChatRoute] INFO: Generating response for: Tell me about yourself
 [2026-01-25T10:07:13.120Z] [ChatRoute] INFO: Generating response for: What products do you offer?
+[2026-01-25T14:43:22.837Z] [ChatRoute] INFO: Generating response for: hello
+[2026-01-26T09:54:41.195Z] [ChatRoute] INFO: Generating response for: hello tell me about my services ?
+[2026-01-26T10:00:57.886Z] [ChatRoute] INFO: Generating response for: Tell me about yourself
+[2026-01-26T10:03:38.153Z] [ChatRoute] INFO: Generating response for: what service i provide ?
+[2026-01-26T10:04:48.990Z] [ChatRoute] INFO: Generating response for: What services do you provide?
+[2026-01-26T10:04:57.301Z] [ChatRoute] INFO: Generating response for: What products do you offer?
+[2026-01-26T14:08:43.626Z] [ChatRoute] INFO: Generating response for: hello
+[2026-01-26T14:08:59.811Z] [ChatRoute] INFO: Generating response for: tell me about my services ?
+[2026-01-26T14:10:11.659Z] [ChatRoute] INFO: Generating response for: Tell me about yourself
+[2026-01-26T14:10:47.838Z] [ChatRoute] INFO: Generating response for: what services ?
+[2026-01-26T14:11:13.442Z] [ChatRoute] INFO: Generating response for: contact details ?
+[2026-01-26T14:11:30.005Z] [ChatRoute] INFO: Generating response for: What products do you offer?
+[2026-01-26T14:23:00.320Z] [ChatRoute] INFO: Generating response for: who is my wife ?
+[2026-01-26T14:23:17.104Z] [ChatRoute] INFO: Generating response for: wife?
+[2026-01-26T14:23:34.830Z] [ChatRoute] INFO: Generating response for: whose wife
+[2026-01-26T14:24:36.251Z] [ChatRoute] INFO: Generating response for: who is my wife ?
+[2026-01-27T03:06:58.400Z] [ChatRoute] INFO: Generating response for: hello
+[2026-01-27T11:53:03.301Z] [ChatRoute] INFO: Generating response for: what services i offer
+[2026-01-27T11:59:28.178Z] [ChatRoute] INFO: Generating response for: tell me about your services in short
+[2026-01-27T14:09:10.191Z] [ChatRoute] INFO: Generating response for: what are my services ?
+[2026-01-27T14:09:54.222Z] [ChatRoute] INFO: Generating response for: What services do you provide?
+[2026-01-27T14:10:00.673Z] [ChatRoute] INFO: Generating response for: What products do you offer?
+[2026-01-29T07:02:43.190Z] [ChatRoute] INFO: Generating response for: hello , tell me about your service ?
+[2026-01-29T07:06:03.167Z] [ChatRoute] INFO: Generating response for: Tell me about yourself
+[2026-01-29T07:55:08.749Z] [ChatRoute] INFO: Generating response for: who is my friend ?
+[2026-01-29T07:56:10.397Z] [ChatRoute] INFO: Generating response for: who is my friend ?
+[2026-01-29T07:56:44.279Z] [ChatRoute] INFO: Generating response for: What services do you provide?
+[2026-02-01T04:30:16.245Z] [ChatRoute] INFO: Generating response for: What services do you provide?
+[2026-02-01T05:10:42.838Z] [IngestWebsite] INFO: Starting crawl for https://docs.botsonic.com/docs/getting-started (SourceID: f1a917d7-fd22-44fc-b83b-2988493b09e6)
+[2026-02-01T05:10:42.857Z] [IngestWebsite] INFO: Submitting crawl job...
+[2026-02-01T05:10:44.255Z] [IngestWebsite] INFO: Job started: 019c179c-4128-76d8-af8d-72d578ac735f. Polling...
+[2026-02-01T05:10:56.763Z] [IngestWebsite] INFO: Crawl completed. Pages: 1
+[2026-02-01T05:11:04.763Z] [IngestWebsite] INFO: Total Chunks Processed: 7
+[2026-02-01T05:20:20.127Z] [ChatRoute] INFO: Generating response for: what are the different pages on botsonic docs website
+[2026-02-01T05:20:56.698Z] [ChatRoute] INFO: Generating response for: tell me about getting started with botsonic chatbpt
+[2026-02-01T05:21:28.174Z] [ChatRoute] INFO: Generating response for: Available AI Models
+[2026-02-01T05:21:56.117Z] [ChatRoute] INFO: Generating response for: what ai model botsonic offer
+[2026-02-01T05:22:39.778Z] [ChatRoute] INFO: Generating response for: what do you know about Workspaces and Sidebar
+[2026-02-01T05:23:21.272Z] [IngestFile] INFO: DOCX Parsed: 4390 chars
+[2026-02-01T05:23:55.739Z] [ChatRoute] INFO: Generating response for: how llm chatbot can provide Personalized Engagement
+[2026-02-01T07:57:15.920Z] [ChatRoute] INFO: Generating response for: what are my services ?

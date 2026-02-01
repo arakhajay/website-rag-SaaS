@@ -1,6 +1,6 @@
 import { getChatbots } from "@/app/actions/chatbot"
 import { ChatbotSwitcher } from "@/components/dashboard/chatbot-switcher"
-import { DataSourcesManager } from "@/components/dashboard/training/data-sources-manager"
+import { TrainingManager } from "@/components/dashboard/training/training-manager"
 import { ChatInterface } from "@/components/dashboard/chat-interface"
 
 export default async function TrainingPage({ params }: { params: Promise<{ id: string }> }) {
@@ -15,7 +15,7 @@ export default async function TrainingPage({ params }: { params: Promise<{ id: s
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Training: {chatbotName}</h1>
-                    <p className="text-muted-foreground">Teach your chatbot by adding knowledge sources and testing immediately.</p>
+                    <p className="text-muted-foreground">Teach your chatbot by adding knowledge sources, guidelines, and workflows.</p>
                 </div>
                 <div>
                     <ChatbotSwitcher chatbots={chatbots || []} currentChatbotId={chatbotId} />
@@ -23,9 +23,9 @@ export default async function TrainingPage({ params }: { params: Promise<{ id: s
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full pb-20">
-                {/* Left Pane: Data Ingestion */}
+                {/* Left Pane: Training Manager (Knowledge, Guidelines, Workflows) */}
                 <div className="h-full">
-                    <DataSourcesManager chatbotId={chatbotId} />
+                    <TrainingManager chatbotId={chatbotId} />
                 </div>
 
                 {/* Right Pane: Live Testing */}
@@ -36,3 +36,4 @@ export default async function TrainingPage({ params }: { params: Promise<{ id: s
         </div>
     )
 }
+

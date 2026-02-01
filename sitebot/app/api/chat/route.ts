@@ -159,8 +159,34 @@ export async function POST(req: Request) {
             }
         })()
 
+        // 4. Fetch Guidelines & Workflows (Parallel)
+        const rulesPromise = (async () => {
+            try {
+                const supabase = createAdminClient()
+                const { data: guidelines } = await supabase
+                    .from('guidelines')
+                    .select('title, content')
+                    .eq('chatbot_id', chatbotId)
+                    .eq('is_active', true)
+
+                const { data: workflows } = await supabase
+                    .from('workflows')
+                    .select('title, trigger_condition, instructions, training_phrases')
+                    .eq('chatbot_id', chatbotId)
+                    .eq('is_active', true)
+
+                return {
+                    guidelines: guidelines || [],
+                    workflows: workflows || []
+                }
+            } catch (e) {
+                console.error('[Chat] Rules fetch error:', e)
+                return { guidelines: [], workflows: [] }
+            }
+        })()
+
         // Wait for search results
-        const [vectorContext, sqlContext] = await Promise.all([vectorPromise, sqlPromise])
+        const [vectorContext, sqlContext, rules] = await Promise.all([vectorPromise, sqlPromise, rulesPromise])
 
         // Combine context
         let combinedContext = ''
@@ -175,10 +201,27 @@ export async function POST(req: Request) {
             combinedContext = 'No relevant information found in the knowledge base.'
         }
 
-        const systemPrompt = `You are a helpful AI assistant. Answer questions based ONLY on the following context.
+        // Build System Prompt
+        let guidelinesText = ''
+        if (rules.guidelines.length > 0) {
+            guidelinesText = '\n**BEHAVIORAL GUIDELINES:**\n' + rules.guidelines.map(g => `- ${g.title}: ${g.content}`).join('\n')
+        }
+
+        let workflowsText = ''
+        if (rules.workflows.length > 0) {
+            workflowsText = '\n**SPECIALIZED WORKFLOWS:**\nCheck if the user input matches any of these triggers. If so, follow the instructions PRECISELY.\n' +
+                rules.workflows.map((w, i) => {
+                    const phrases = w.training_phrases && w.training_phrases.length > 0 ? `\n   Examples: ${w.training_phrases.join(', ')}` : ''
+                    return `${i + 1}. [${w.title}]\n   Trigger: "${w.trigger_condition}"${phrases}\n   Instructions: ${w.instructions}`
+                }).join('\n\n')
+        }
+
+        const systemPrompt = `You are a helpful AI assistant. Answer questions based on the following context and adhere strictly to the guidelines and workflows.
 
 **CONTEXT:**
 ${combinedContext}
+${guidelinesText}
+${workflowsText}
 
 **RESPONSE GUIDELINES:**
 - Answer based on the provided context only

@@ -13,8 +13,15 @@
     <p>This page demonstrates the embedded SiteBot widget.</p>
 
     <!-- SiteBot Widget Embed Code -->
-    <script src="http://localhost:3000/widget.bundle.js"
-        data-chatbot-id="b5b9f7d4-dbbb-44ab-b165-1e6dad2e4d95"></script>
+    <script>
+        (function () {
+            var script = document.createElement('script');
+            script.src = "http://localhost:3001/widget.bundle.js";
+            script.setAttribute('data-chatbot-id', "b5b9f7d4-dbbb-44ab-b165-1e6dad2e4d95");
+            script.async = true;
+            document.body.appendChild(script);
+        })();
+    </script>
 </body>
 
 </html>
