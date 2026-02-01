@@ -49,6 +49,7 @@ export interface ChatbotSettings {
     }
     user_form: {
         enabled?: boolean
+        force_gate?: boolean
         captcha_enabled?: boolean
         fields?: {
             id: string
@@ -119,6 +120,7 @@ export async function getChatbotSettings(chatbotId: string) {
             },
             user_form: {
                 enabled: false,
+                force_gate: false,
                 captcha_enabled: false,
                 fields: [
                     { id: 'name', type: 'text', label: 'Name', required: true },

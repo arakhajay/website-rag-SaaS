@@ -63,14 +63,30 @@ export function UserFormSettings({ settings, onSave }: UserFormSettingsProps) {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                         <div className="space-y-1">
-                            <CardTitle className="text-base">Enable user form</CardTitle>
-                            <CardDescription>Enable or disable user form</CardDescription>
+                            <CardTitle className="text-base">Enable User Form</CardTitle>
+                            <CardDescription>Allow users to submit details via a form</CardDescription>
                         </div>
                         <Switch
                             checked={config.enabled}
                             onCheckedChange={(checked) => handleConfigChange("enabled", checked)}
                         />
                     </CardHeader>
+                    {config.enabled && (
+                        <div className="px-6 pb-4">
+                            <div className="flex items-center justify-between pt-4 border-t">
+                                <Label className="flex flex-col gap-1">
+                                    <span>Force Form Before Chat</span>
+                                    <span className="font-normal text-xs text-muted-foreground">Require users to fill this form before they can send a message</span>
+                                </Label>
+                                <Switch
+                                    // @ts-ignore
+                                    checked={config.force_gate}
+                                    // @ts-ignore
+                                    onCheckedChange={(checked) => handleConfigChange("force_gate", checked)}
+                                />
+                            </div>
+                        </div>
+                    )}
                 </Card>
 
                 <Card>

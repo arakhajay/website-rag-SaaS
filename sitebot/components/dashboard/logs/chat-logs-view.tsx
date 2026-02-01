@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { getChatSessions, getChatMessages } from '@/app/actions/chat-logs'
-import { MessageSquare, Clock, Globe, Monitor, Trash2 } from 'lucide-react'
+import { MessageSquare, Clock, Globe, Monitor, Trash2, RefreshCcw } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import {
     AlertDialog,
@@ -114,10 +114,25 @@ export function ChatLogsView({ chatbotId }: { chatbotId: string }) {
                                 {sessions.length}
                             </Badge>
                         )}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 ml-2 text-muted-foreground"
+                            onClick={() => {
+                                setLoading(true)
+                                getChatSessions(chatbotId).then((data) => {
+                                    setSessions(data as Session[])
+                                    setLoading(false)
+                                })
+                            }}
+                            title="Refresh"
+                        >
+                            <RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                        </Button>
                         {sessions.length > 0 && (
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 ml-2 text-muted-foreground hover:text-destructive" disabled={isClearing}>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 ml-1 text-muted-foreground hover:text-destructive" disabled={isClearing}>
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </AlertDialogTrigger>

@@ -48,7 +48,9 @@ export function Sidebar() {
                 { name: 'Content & Training', href: `/dashboard/chatbot/${currentChatbotId}/training`, icon: FileText },
                 { name: 'Bot Settings', href: `/dashboard/chatbot/${currentChatbotId}/settings`, icon: Settings },
                 { name: 'Connect', href: `/dashboard/chatbot/${currentChatbotId}/connect`, icon: Share2 },
+                { name: 'Leads', href: `/dashboard/chatbot/${currentChatbotId}/leads`, icon: Users },
                 { name: 'Chat Logs', href: `/dashboard/chatbot/${currentChatbotId}/logs`, icon: MessageSquare },
+                { name: 'Analytics', href: `/dashboard/chatbot/${currentChatbotId}/analytics`, icon: BarChart3 },
             )
         } else {
             // Generic routes when no chatbot is selected
@@ -56,13 +58,12 @@ export function Sidebar() {
                 { name: 'Content & Training', href: '/dashboard/training', icon: FileText },
                 { name: 'Bot Settings', href: '/dashboard/settings', icon: Settings },
                 { name: 'Chat Logs', href: '/dashboard/logs', icon: MessageSquare },
+                { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
             )
         }
 
         // Always show these
         baseItems.push(
-            { name: 'Leads', href: '/dashboard/leads', icon: Users },
-            { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
             { name: 'Integrations', href: '/dashboard/integrations', icon: LinkIcon },
         )
 

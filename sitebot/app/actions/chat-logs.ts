@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { unstable_noStore as noStore } from 'next/cache'
 
 // Get or create a chat session
 export async function getOrCreateChatSession(
@@ -69,6 +70,7 @@ export async function logChatMessage(
 
 // Get chat sessions for a chatbot
 export async function getChatSessions(chatbotId: string) {
+    noStore()
     const supabase = createAdminClient()
 
     const { data, error } = await supabase
@@ -95,6 +97,7 @@ export async function getChatSessions(chatbotId: string) {
 
 // Get messages for a session
 export async function getChatMessages(dbSessionId: string) {
+    noStore()
     const supabase = createAdminClient()
 
     const { data, error } = await supabase

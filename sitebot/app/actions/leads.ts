@@ -1,25 +1,24 @@
 'use server'
 
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
 
 export interface Lead {
     id: string
-    chatbot_id: string
+    name?: string
     email: string
-    phone: string | null
-    message: string | null
+    phone?: string
+    message?: string
     status: 'new' | 'contacted' | 'qualified' | 'converted' | 'lost'
-    remark: string | null
+    remark?: string
     source: string
-    last_contact_at: string | null
     created_at: string
-    updated_at: string
+    chatbot_id: string
+    custom_data?: any
 }
 
-// Get leads for a chatbot
-export async function getLeads(chatbotId: string): Promise<Lead[]> {
-    const supabase = createAdminClient()
-
+export async function getLeads(chatbotId: string) {
+    const supabase = await createClient()
     const { data, error } = await supabase
         .from('leads')
         .select('*')
@@ -27,53 +26,50 @@ export async function getLeads(chatbotId: string): Promise<Lead[]> {
         .order('created_at', { ascending: false })
 
     if (error) {
-        console.error('[Leads] Fetch error:', error)
+        console.error('Error fetching leads:', error)
         return []
     }
-
     return data as Lead[]
 }
 
-// Update lead status/remark
-export async function updateLead(
-    leadId: string,
-    updates: {
-        status?: Lead['status']
-        remark?: string
-        last_contact_at?: string
-    }
-) {
-    const supabase = createAdminClient()
-
-    const { error } = await supabase
-        .from('leads')
-        .update({
-            ...updates,
-            updated_at: new Date().toISOString(),
-        })
-        .eq('id', leadId)
-
-    if (error) {
-        console.error('[Leads] Update error:', error)
-        return { success: false, error: error.message }
-    }
-
-    return { success: true }
+export async function updateLeadStatus(leadId: string, status: string) {
+    return updateLead(leadId, { status: status as Lead['status'] })
 }
 
-// Delete a lead
-export async function deleteLead(leadId: string) {
-    const supabase = createAdminClient()
+export async function updateLead(leadId: string, updates: Partial<Lead>) {
+    const supabase = await createClient()
 
-    const { error } = await supabase
-        .from('leads')
-        .delete()
-        .eq('id', leadId)
+    try {
+        const { error } = await supabase
+            .from('leads')
+            .update(updates)
+            .eq('id', leadId)
 
-    if (error) {
-        console.error('[Leads] Delete error:', error)
-        return { success: false, error: error.message }
+        if (error) throw error
+
+        revalidatePath('/dashboard/chatbot/[id]/leads')
+        return { success: true }
+    } catch (error) {
+        console.error('Error updating lead:', error)
+        return { success: false, error: 'Failed to update lead' }
     }
+}
 
-    return { success: true }
+export async function deleteLead(leadId: string) {
+    const supabase = await createClient()
+
+    try {
+        const { error } = await supabase
+            .from('leads')
+            .delete()
+            .eq('id', leadId)
+
+        if (error) throw error
+
+        revalidatePath('/dashboard/chatbot/[id]/leads')
+        return { success: true }
+    } catch (error) {
+        console.error('Error deleting lead:', error)
+        return { success: false, error: 'Failed to delete lead' }
+    }
 }

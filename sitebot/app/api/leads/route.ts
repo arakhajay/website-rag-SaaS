@@ -17,7 +17,7 @@ export async function OPTIONS() {
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json()
-        const { chatbotId, email, phone, message, source = 'widget' } = body
+        const { chatbotId, email, phone, message, name, source = 'widget', ...rest } = body
 
         if (!chatbotId || !email) {
             return NextResponse.json(
@@ -33,8 +33,10 @@ export async function POST(req: NextRequest) {
             .insert({
                 chatbot_id: chatbotId,
                 email,
+                name: name || '',
                 phone,
-                message: message?.slice(0, 2000), // Max 2000 chars
+                message: message?.slice(0, 2000),
+                custom_data: rest, // Save extra fields like dynamic form inputs
                 source,
             })
             .select('id')

@@ -125,3 +125,9 @@
 [2026-02-01T05:23:21.272Z] [IngestFile] INFO: DOCX Parsed: 4390 chars
 [2026-02-01T05:23:55.739Z] [ChatRoute] INFO: Generating response for: how llm chatbot can provide Personalized Engagement
 [2026-02-01T07:57:15.920Z] [ChatRoute] INFO: Generating response for: what are my services ?
+[2026-02-01T08:11:05.098Z] [ChatRoute] INFO: Generating response for: hello 
+[2026-02-01T08:12:58.024Z] [ChatRoute] INFO: Generating response for: contact
+[2026-02-01T08:29:34.449Z] [ChatRoute] INFO: Generating response for: what kind of questions i can ask ?
+[2026-02-01T09:00:45.428Z] [ChatRoute] INFO: Generating response for: hello
+[2026-02-01T09:01:06.856Z] [ChatRoute] INFO: Generating response for: tell me about yourself ?
+[2026-02-01T09:38:40.637Z] [ChatRoute] INFO: Generating response for: hello

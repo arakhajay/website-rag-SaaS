@@ -26,6 +26,7 @@ interface WidgetSettings {
   starter_questions?: string[]
   user_form?: {
     enabled?: boolean
+    force_gate?: boolean
     fields?: Array<{ id: string, type: string, label: string, required: boolean }>
   }
   working_hours?: {
@@ -90,7 +91,8 @@ function Widget({ chatbotId }: { chatbotId: string }) {
           }
 
           // User Form Check
-          if (data.settings.user_form?.enabled) {
+          // Only show if enabled AND force_gate is true
+          if (data.settings.user_form?.enabled && data.settings.user_form?.force_gate) {
             // In a real app, maybe check localStorage if already submitted
             setShowUserForm(true)
           }
@@ -168,7 +170,7 @@ function Widget({ chatbotId }: { chatbotId: string }) {
   }
 
   // Contact form state (Standalone explicit contact)
-  const [contactFormData, setContactFormData] = useState({ email: '', phone: '', message: '' })
+  const [contactFormData, setContactFormData] = useState<Record<string, string>>({})
   const [contactFormLoading, setContactFormLoading] = useState(false)
   const [contactFormSubmitted, setContactFormSubmitted] = useState(false)
 
@@ -236,25 +238,49 @@ function Widget({ chatbotId }: { chatbotId: string }) {
 
   const handleContactFormSubmit = async (e: any) => {
     e.preventDefault()
-    if (!contactFormData.email.trim()) return
 
     setContactFormLoading(true)
     try {
+      let payload = { ...contactFormData }
+
+      // Map dynamic fields to standard keys if they exist in settings
+      if (settings?.user_form?.fields) {
+        const emailField = settings.user_form.fields.find(f => f.type === 'email')
+        if (emailField && payload[emailField.id]) {
+          payload['email'] = payload[emailField.id]
+        }
+
+        const nameField = settings.user_form.fields.find(f => f.label.toLowerCase().includes('name'))
+        if (nameField && payload[nameField.id]) {
+          payload['name'] = payload[nameField.id]
+        }
+
+        const msgField = settings.user_form.fields.find(f => f.type === 'textarea' || f.label.toLowerCase().includes('message'))
+        if (msgField && payload[msgField.id]) {
+          payload['message'] = payload[msgField.id]
+        }
+
+        const phoneField = settings.user_form.fields.find(f => f.type === 'phone')
+        if (phoneField && payload[phoneField.id]) {
+          payload['phone'] = payload[phoneField.id]
+        }
+      }
+
       const response = await fetch('http://localhost:3001/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chatbotId,
-          email: contactFormData.email,
-          phone: contactFormData.phone,
-          message: contactFormData.message,
+          ...payload,
           source: 'widget_contact',
         }),
       })
 
       if (response.ok) {
         setContactFormSubmitted(true)
-        setContactFormData({ email: '', phone: '', message: '' })
+        setContactFormData({})
+      } else {
+        console.error('Submission failed', response.statusText)
       }
     } catch (error) {
       console.error('Form submission error:', error)
@@ -425,65 +451,113 @@ function Widget({ chatbotId }: { chatbotId: string }) {
               <h3>{settings?.appearance?.widget_name || 'Chat Support'}</h3>
               {settings?.appearance?.subheading && <p>{settings.appearance.subheading}</p>}
             </div>
-            <button className="sitebot-close" onClick={() => setIsOpen(false)}>×</button>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {!showUserForm && !showContactForm && (
+                <button
+                  onClick={() => setShowContactForm(true)}
+                  style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '4px' }}
+                  title="Contact Us"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                </button>
+              )}
+              <button className="sitebot-close" onClick={() => setIsOpen(false)}>×</button>
+            </div>
           </div>
 
-          {/* User Gate Form */}
-          {showUserForm && !userFormSubmitted ? (
-            <form className="sitebot-form-container" onSubmit={handleUserFormSubmit}>
+          {/* Form View (Used for both Gate and Manual Contact) */}
+          {(showUserForm || showContactForm) && !userFormSubmitted && !contactFormSubmitted ? (
+            <form className="sitebot-form-container" onSubmit={showUserForm ? handleUserFormSubmit : handleContactFormSubmit}>
               <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-                <h4>Please fill out the form to start chatting</h4>
+                <h4>{showUserForm ? 'Please fill out the form to start chatting' : 'Contact Us'}</h4>
+                {!showUserForm && <p style={{ fontSize: '13px', color: '#666', margin: '4px 0' }}>Leave your details and we will get back to you.</p>}
               </div>
-              {settings?.user_form?.fields?.map(field => (
-                <div key={field.id}>
-                  <label className="sitebot-form-label">
-                    {field.label} {field.required && <span style={{ color: 'red' }}>*</span>}
-                  </label>
-                  {field.type === 'textarea' ? (
-                    <textarea
-                      className="sitebot-form-input"
-                      required={field.required}
-                      onInput={(e) => setUserFormData({ ...userFormData, [field.id]: (e.target as any).value })}
-                    />
-                  ) : (
-                    <input
-                      type={field.type}
-                      className="sitebot-form-input"
-                      required={field.required}
-                      onInput={(e) => setUserFormData({ ...userFormData, [field.id]: (e.target as any).value })}
-                    />
-                  )}
-                </div>
-              ))}
-              <button type="submit" className="sitebot-form-submit">Start Chat</button>
-            </form>
-          ) : showContactForm ? (
-            // Existing Contact Form Logic (simplified reuse)
-            <form className="sitebot-form-container" onSubmit={handleContactFormSubmit}>
-              <h3>Contact Us</h3>
-              {contactFormSubmitted ? (
-                <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                  <p>Message Sent!</p>
-                  <button type="button" onClick={() => setShowContactForm(false)} className="sitebot-form-submit" style={{ marginTop: '20px' }}>Back</button>
-                </div>
-              ) : (
+
+              {/* Render dynamic fields if available, otherwise default fields */}
+              {(settings?.user_form?.fields && settings.user_form.fields.length > 0) ? (
+                settings.user_form.fields.map(field => (
+                  <div key={field.id}>
+                    <label className="sitebot-form-label">
+                      {field.label} {field.required && <span style={{ color: 'red' }}>*</span>}
+                    </label>
+                    {field.type === 'textarea' ? (
+                      <textarea
+                        className="sitebot-form-input"
+                        required={field.required}
+                        onInput={(e) => {
+                          const val = (e.target as any).value;
+                          if (showUserForm) setUserFormData({ ...userFormData, [field.id]: val });
+                          else setContactFormData({ ...contactFormData, [field.id]: val });
+                        }}
+                      />
+                    ) : (
+                      <input
+                        type={field.type}
+                        className="sitebot-form-input"
+                        required={field.required}
+                        onInput={(e) => {
+                          const val = (e.target as any).value;
+                          if (showUserForm) setUserFormData({ ...userFormData, [field.id]: val });
+                          else setContactFormData({ ...contactFormData, [field.id]: val });
+                        }}
+                      />
+                    )}
+                  </div>
+                ))) : (
+                // Fallback default fields if no dynamic form configured
                 <>
                   <div>
-                    <label className="sitebot-form-label">Email</label>
-                    <input className="sitebot-form-input" required type="email" value={contactFormData.email} onInput={e => setContactFormData({ ...contactFormData, email: (e.target as any).value })} />
+                    <label className="sitebot-form-label">Email <span style={{ color: 'red' }}>*</span></label>
+                    <input className="sitebot-form-input" required type="email"
+                      onInput={e => {
+                        const val = (e.target as any).value;
+                        if (showUserForm) setUserFormData({ ...userFormData, email: val });
+                        else setContactFormData({ ...contactFormData, email: val });
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label className="sitebot-form-label">Name</label>
+                    <input className="sitebot-form-input" type="text"
+                      onInput={e => {
+                        const val = (e.target as any).value;
+                        if (showUserForm) setUserFormData({ ...userFormData, name: val });
+                        else setContactFormData({ ...contactFormData, name: val });
+                      }}
+                    />
                   </div>
                   <div>
                     <label className="sitebot-form-label">Message</label>
-                    <textarea className="sitebot-form-input" required value={contactFormData.message} onInput={e => setContactFormData({ ...contactFormData, message: (e.target as any).value })} />
+                    <textarea className="sitebot-form-input"
+                      onInput={e => {
+                        const val = (e.target as any).value;
+                        if (showUserForm) setUserFormData({ ...userFormData, message: val });
+                        else setContactFormData({ ...contactFormData, message: val });
+                      }}
+                    />
                   </div>
-                  <button type="submit" className="sitebot-form-submit" disabled={contactFormLoading}>
-                    {contactFormLoading ? 'Sending...' : 'Send Message'}
-                  </button>
-                  <button type="button" onClick={() => setShowContactForm(false)} style={{ background: 'transparent', border: 'none', width: '100%', padding: '10px', cursor: 'pointer', marginTop: '10px' }}>Cancel</button>
                 </>
               )}
-            </form>
 
+              <button type="submit" className="sitebot-form-submit" disabled={contactFormLoading}>
+                {contactFormLoading ? 'Sending...' : (showUserForm ? 'Start Chat' : 'Submit')}
+              </button>
+
+              {!showUserForm && (
+                <button type="button" onClick={() => setShowContactForm(false)} style={{ background: 'transparent', border: 'none', width: '100%', padding: '10px', cursor: 'pointer', marginTop: '10px', color: '#666' }}>
+                  Cancel
+                </button>
+              )}
+            </form>
+          ) : contactFormSubmitted && !showUserForm ? (
+            <div className="sitebot-form-container" style={{ justifyContent: 'center', textAlign: 'center' }}>
+              <div style={{ fontSize: '48px', marginBottom: '20px' }}>✅</div>
+              <h3>Message Sent!</h3>
+              <p>We'll get back to you shortly.</p>
+              <button type="button" onClick={() => { setContactFormSubmitted(false); setShowContactForm(false); }} className="sitebot-form-submit" style={{ marginTop: '20px' }}>
+                Back to Chat
+              </button>
+            </div>
           ) : (
             <>
               {/* Chat View */}
@@ -508,7 +582,34 @@ function Widget({ chatbotId }: { chatbotId: string }) {
                 </div>
               )}
 
-              <form className="sitebot-input-area" onSubmit={handleSubmit}>
+              {!showUserForm && !showContactForm && (
+                <div style={{ padding: '0 16px 8px 16px' }}>
+                  <button
+                    onClick={() => setShowContactForm(true)}
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      background: '#f4f4f5',
+                      border: '1px solid #e4e4e7',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      color: '#333',
+                      fontWeight: 500,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#e4e4e7')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = '#f4f4f5')}
+                  >
+                    Contact Us
+                  </button>
+                </div>
+              )}
+
+              <form className="sitebot-input-area" onSubmit={handleSubmit} style={{ borderTop: 'none', paddingTop: '4px' }}>
                 <input
                   className="sitebot-input"
                   value={input}
