@@ -1,6 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { getDailySessions } from '@/app/actions/dashboard-stats'
 
-export function SessionChart() {
+export async function SessionChart() {
+    const data = await getDailySessions()
+
+    // Find max for scaling
+    const maxSessions = Math.max(...data.map(d => d.sessions), 1)
+
     return (
         <Card className="col-span-2">
             <CardHeader>
@@ -8,17 +14,17 @@ export function SessionChart() {
             </CardHeader>
             <CardContent>
                 <div className="h-[200px] w-full flex items-end justify-between gap-2 px-2">
-                    {[0, 0, 0, 0, 0, 2, 8].map((val, i) => (
+                    {data.map((day, i) => (
                         <div key={i} className="flex flex-col items-center gap-2 flex-1 group">
                             <div
-                                className="w-full bg-primary/20 rounded-t-sm transition-all group-hover:bg-primary/40 relative"
-                                style={{ height: `${val * 10}%` }}
+                                className="w-full bg-primary/20 rounded-t-sm transition-all group-hover:bg-primary/40 relative min-h-[4px]"
+                                style={{ height: `${Math.max((day.sessions / maxSessions) * 100, 2)}%` }}
                             >
                                 <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                                    {val}
+                                    {day.sessions}
                                 </span>
                             </div>
-                            <div className="h-px w-full bg-border" />
+                            <div className="text-xs text-muted-foreground">{day.label}</div>
                         </div>
                     ))}
                 </div>

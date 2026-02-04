@@ -1,6 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { getTrainingUsage } from '@/app/actions/dashboard-stats'
 
-export function TrainingChart() {
+export async function TrainingChart() {
+    const { used, limit, percentage } = await getTrainingUsage()
+
+    // Calculate stroke dash array for the progress circle
+    const circumference = 251.2 // 2 * PI * 40
+    const strokeDash = (percentage / 100) * circumference
+
     return (
         <Card className="col-span-1">
             <CardHeader className="pb-2">
@@ -20,11 +27,11 @@ export function TrainingChart() {
                             cx="50"
                             cy="50"
                         />
-                        {/* Progress Circle (example value) */}
+                        {/* Progress Circle */}
                         <circle
                             className="text-blue-500"
                             strokeWidth="12"
-                            strokeDasharray={`${(40 / 100) * 251.2} 251.2`}
+                            strokeDasharray={`${strokeDash} ${circumference}`}
                             strokeLinecap="round"
                             stroke="currentColor"
                             fill="transparent"
@@ -34,12 +41,12 @@ export function TrainingChart() {
                         />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xl font-bold">0</span>
+                        <span className="text-xl font-bold">{Math.round(percentage)}%</span>
                     </div>
                 </div>
                 <div className="mt-4 text-center">
-                    <span className="text-blue-500 font-bold">42132 used</span>
-                    <span className="text-muted-foreground"> of 400000 Limit</span>
+                    <span className="text-blue-500 font-bold">{used.toLocaleString()} used</span>
+                    <span className="text-muted-foreground"> of {limit.toLocaleString()} Limit</span>
                 </div>
             </CardContent>
         </Card>

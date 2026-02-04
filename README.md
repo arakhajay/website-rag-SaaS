@@ -28,7 +28,8 @@ A full-stack SaaS platform for creating AI chatbots trained on your own data. Bu
 | ⚙️ **Extended Settings**      | ✅ Complete | Email, Security, User Forms, Working Hours, Switcher         |
 | 🔗 **Connect Tab**            | ✅ Complete | Embed Code & REST API Details                                |
 | ⚡ **Guidelines & Workflows** | ✅ Complete | Behavioral control & Structured processes                    |
-| 📈 **Analytics Dashboard**    | 🔄 In Progress | Usage stats, AI Analyst, conversation metrics              |
+| 📈 **Analytics Dashboard**    | ✅ Complete | Usage stats, AI Analyst, conversation metrics, session charts |
+| 🏠 **Dashboard Home**         | ✅ Complete | Real-time usage, training stats, and daily session chart     |
 
 ### 🚧 Pending Modules
 
@@ -36,12 +37,18 @@ A full-stack SaaS platform for creating AI chatbots trained on your own data. Bu
 | ----------- | --------- | ---------------------------------------- |
 | 💳 Billing   | 🕐 Pending | Stripe integration                       |
 
-## 📈 Analytics Features (In Progress)
+## 📈 Analytics Features
 
 - **Conversation Metrics** - Track total conversations, messages, and response times
 - **AI Analyst** - Ask questions about your chatbot usage in natural language
 - **Date Range Filters** - Filter analytics by custom date ranges
 - **Lead Tracking** - Monitor lead capture performance
+
+## 🏠 Dashboard Home
+
+- **Usage Widget** - Monthly message credits tracking
+- **Training Widget** - Training characters used
+- **Session Chart** - Daily chat sessions (last 7 days)
 
 ## 🔌 Widget Embed Code
 
@@ -81,9 +88,9 @@ sitebot/
 ├ app/
 │   ├ api/chat/       # RAG chat endpoint (with logging)
 │   ├ api/leads/      # Lead submission endpoint
-│   ├ actions/        # Server actions (ingest, leads, chat-logs, analytics)
+│   ├ actions/        # Server actions (ingest, leads, chat-logs, analytics, dashboard-stats)
 │   ├ auth/           # Login, Register
-│   ├ dashboard/      # Main app (Leads, Logs, Training, Analytics)
+│   ├ dashboard/      # Main app (Leads, Logs, Training, Analytics, Connect)
 ├ components/         # React components
 │   ├ dashboard/
 │       ├ analytics/  # Analytics dashboard components

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Copy, Check } from "lucide-react"
@@ -11,10 +11,12 @@ interface EmbedSectionProps {
 
 export function EmbedSection({ chatbotId }: EmbedSectionProps) {
     const [copied, setCopied] = useState(false)
+    const [scriptSrc, setScriptSrc] = useState('/widget.bundle.js')
 
-    // Construct the script tag (pointing to localhost for now, or relative path if deployed)
-    // In production, this src should be the absolute URL to your deployed widget.bundle.js
-    const scriptSrc = typeof window !== 'undefined' ? `${window.location.origin}/widget.bundle.js` : '/widget.bundle.js'
+    // Set the full URL on client side after hydration
+    useEffect(() => {
+        setScriptSrc(`${window.location.origin}/widget.bundle.js`)
+    }, [])
 
     const embedCode = `<script>
   (function() {

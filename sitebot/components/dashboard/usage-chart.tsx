@@ -1,6 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { getMonthlyUsage } from '@/app/actions/dashboard-stats'
 
-export function UsageChart() {
+export async function UsageChart() {
+    const { used, limit, percentage } = await getMonthlyUsage()
+
+    // Calculate stroke dash array for the progress circle
+    const circumference = 251.2 // 2 * PI * 40
+    const strokeDash = (percentage / 100) * circumference
+
     return (
         <Card className="col-span-1">
             <CardHeader className="pb-2">
@@ -20,11 +27,11 @@ export function UsageChart() {
                             cx="50"
                             cy="50"
                         />
-                        {/* Progress Circle (very small slice for 2/10000) */}
+                        {/* Progress Circle */}
                         <circle
                             className="text-primary"
                             strokeWidth="12"
-                            strokeDasharray={`${(2 / 100) * 251.2} 251.2`}
+                            strokeDasharray={`${strokeDash} ${circumference}`}
                             strokeLinecap="round"
                             stroke="currentColor"
                             fill="transparent"
@@ -34,12 +41,12 @@ export function UsageChart() {
                         />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xl font-bold">0.02%</span>
+                        <span className="text-xl font-bold">{percentage}%</span>
                     </div>
                 </div>
                 <div className="mt-4 text-center">
-                    <span className="text-primary font-bold">2 used</span>
-                    <span className="text-muted-foreground"> of 10000 Total</span>
+                    <span className="text-primary font-bold">{used.toLocaleString()} used</span>
+                    <span className="text-muted-foreground"> of {limit.toLocaleString()} Total</span>
                 </div>
             </CardContent>
         </Card>

@@ -53,10 +53,12 @@ export function Sidebar() {
                 { name: 'Analytics', href: `/dashboard/chatbot/${currentChatbotId}/analytics`, icon: BarChart3 },
             )
         } else {
-            // Generic routes when no chatbot is selected
+            // Generic routes when no chatbot is selected - show all tabs consistently
             baseItems.push(
                 { name: 'Content & Training', href: '/dashboard/training', icon: FileText },
                 { name: 'Bot Settings', href: '/dashboard/settings', icon: Settings },
+                { name: 'Connect', href: '/dashboard/connect', icon: Share2 },
+                { name: 'Leads', href: '/dashboard/leads', icon: Users },
                 { name: 'Chat Logs', href: '/dashboard/logs', icon: MessageSquare },
                 { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
             )

@@ -20,7 +20,7 @@ export async function getAnalyticsStats(chatbotId: string, range: string = '7d')
         .from('chat_sessions')
         .select('*', { count: 'exact', head: true })
         .eq('chatbot_id', chatbotId)
-        .gte('created_at', startDateStr) // Using created_at for sessions started
+        .gte('started_at', startDateStr) // Using started_at for sessions
 
     // 2. Total Messages in Range
     // Note: We need to join or filter by session's chatbot_id. 
@@ -66,7 +66,7 @@ export async function getChartData(chatbotId: string, range: string = '7d') {
     if (range === '30d') days = 30
 
     // Generate dates
-    const data = []
+    const data: { date: string; fullDate: string; sessions: number; messages: number }[] = []
     for (let i = days - 1; i >= 0; i--) {
         const date = subDays(new Date(), i)
         data.push({
@@ -82,9 +82,9 @@ export async function getChartData(chatbotId: string, range: string = '7d') {
     // Fetch Sessions grouped by day (Client-side aggregation for MVP as SQL group by is complex via JS SDK)
     const { data: sessions } = await supabase
         .from('chat_sessions')
-        .select('created_at')
+        .select('started_at')
         .eq('chatbot_id', chatbotId)
-        .gte('created_at', startDateStr)
+        .gte('started_at', startDateStr)
 
     // Fetch Messages grouped by day
     const { data: messages } = await supabase
@@ -96,7 +96,7 @@ export async function getChartData(chatbotId: string, range: string = '7d') {
     // Aggregate
     if (sessions) {
         sessions.forEach(s => {
-            const d = format(new Date(s.created_at), 'MMM dd')
+            const d = format(new Date(s.started_at), 'MMM dd')
             const entry = data.find(item => item.date === d)
             if (entry) entry.sessions++
         })
