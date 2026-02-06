@@ -1,5 +1,3 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import { CreateBotDialog } from '@/components/dashboard/create-bot-dialog'
 import { UsageChart } from '@/components/dashboard/usage-chart'
 import { TrainingChart } from '@/components/dashboard/training-chart'
@@ -7,10 +5,19 @@ import { SessionChart } from '@/components/dashboard/session-chart'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Bot, Link as LinkIcon, Calendar } from 'lucide-react'
 import Link from 'next/link'
+import { getChatbots } from '@/app/actions/chatbot'
+import { getMonthlyUsage, getTrainingUsage, getDailySessions } from '@/app/actions/dashboard-stats'
 
 export default async function DashboardPage() {
-    const { getChatbots } = await import('@/app/actions/chatbot')
-    const { chatbots } = await getChatbots()
+    // Fetch all data in PARALLEL to eliminate waterfall
+    const [chatbotsResult, usageData, trainingData, sessionsData] = await Promise.all([
+        getChatbots(),
+        getMonthlyUsage(),
+        getTrainingUsage(),
+        getDailySessions()
+    ])
+
+    const { chatbots } = chatbotsResult
 
     return (
         <div className="space-y-6">
@@ -23,9 +30,9 @@ export default async function DashboardPage() {
 
             {/* Widgets Section */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <UsageChart />
-                <TrainingChart />
-                <SessionChart />
+                <UsageChart data={usageData} />
+                <TrainingChart data={trainingData} />
+                <SessionChart data={sessionsData} />
             </div>
 
             <div className="space-y-4">

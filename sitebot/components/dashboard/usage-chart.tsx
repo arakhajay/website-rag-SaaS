@@ -1,8 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { getMonthlyUsage } from '@/app/actions/dashboard-stats'
 
-export async function UsageChart() {
-    const { used, limit, percentage } = await getMonthlyUsage()
+interface UsageChartProps {
+    data: {
+        used: number
+        limit: number
+        percentage: number
+    }
+}
+
+export function UsageChart({ data }: UsageChartProps) {
+    const { used, limit, percentage } = data
 
     // Calculate stroke dash array for the progress circle
     const circumference = 251.2 // 2 * PI * 40
@@ -52,3 +59,4 @@ export async function UsageChart() {
         </Card>
     )
 }
+

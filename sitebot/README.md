@@ -59,6 +59,14 @@ A full-stack SaaS platform for creating AI chatbots trained on your own data. Bu
 - [ ] Role-based access control
 - [ ] Team/Organization features
 
+#### 🛡️ Super Admin Dashboard
+- [x] **Revenue Analytics** - MRR, ARR, ARPU, Churn Rate
+- [x] **Plan Distribution** - Visual pie chart of user plans
+- [x] **Global Announcements** - Create/manage system-wide banners
+- [x] **Feature Flags** - Toggle features by plan or percentage
+- [x] **Audit Logging** - Track all admin actions
+- [x] **User CSV Export** - Export user data for analysis
+
 ## 🛠️ Tech Stack
 
 | Layer | Technology |
@@ -148,11 +156,15 @@ Visit `http://localhost:3000`
 ### Tables (Supabase)
 
 | Table | Purpose |
-|-------|---------|
+|-------|---------|\
 | `profiles` | User profiles linked to auth |
 | `chatbots` | Chatbot configurations |
 | `training_sources` | Ingested data sources metadata |
 | `csv_data` | Structured CSV data (JSONB) |
+| `subscriptions` | User subscription plans & billing |
+| `admin_audit_log` | Admin action tracking |
+| `announcements` | Global system announcements |
+| `feature_flags` | Feature toggles by plan |
 
 ## 🔧 API Reference
 

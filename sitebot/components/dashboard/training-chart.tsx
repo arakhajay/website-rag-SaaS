@@ -1,8 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { getTrainingUsage } from '@/app/actions/dashboard-stats'
 
-export async function TrainingChart() {
-    const { used, limit, percentage } = await getTrainingUsage()
+interface TrainingChartProps {
+    data: {
+        used: number
+        limit: number
+        percentage: number
+    }
+}
+
+export function TrainingChart({ data }: TrainingChartProps) {
+    const { used, limit, percentage } = data
 
     // Calculate stroke dash array for the progress circle
     const circumference = 251.2 // 2 * PI * 40
@@ -52,3 +59,4 @@ export async function TrainingChart() {
         </Card>
     )
 }
+

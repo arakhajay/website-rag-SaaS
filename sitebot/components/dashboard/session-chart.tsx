@@ -1,9 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { getDailySessions } from '@/app/actions/dashboard-stats'
 
-export async function SessionChart() {
-    const data = await getDailySessions()
+interface SessionData {
+    date: string
+    label: string
+    sessions: number
+}
 
+interface SessionChartProps {
+    data: SessionData[]
+}
+
+export function SessionChart({ data }: SessionChartProps) {
     // Find max for scaling
     const maxSessions = Math.max(...data.map(d => d.sessions), 1)
 
@@ -32,3 +39,4 @@ export async function SessionChart() {
         </Card>
     )
 }
+

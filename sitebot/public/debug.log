@@ -136,3 +136,11 @@
 [2026-02-04T10:11:52.732Z] [ChatRoute] INFO: Generating response for: what services you provide ?
 [2026-02-04T11:06:21.231Z] [ChatRoute] INFO: Generating response for: what are my services ?
 [2026-02-04T11:43:25.593Z] [ChatRoute] INFO: Generating response for: what kind of services you provide ?
+[2026-02-06T10:36:23.877Z] [IngestWebsite] INFO: Starting crawl for https://arakhajay.vercel.app/ (SourceID: undefined)
+[2026-02-06T10:36:23.899Z] [IngestWebsite] INFO: Submitting crawl job...
+[2026-02-06T10:36:25.617Z] [IngestWebsite] INFO: Job started: 019c3286-3d70-7058-91c5-ee3f18a3bd70. Polling...
+[2026-02-06T10:36:31.521Z] [IngestWebsite] INFO: Crawl completed. Pages: 1
+[2026-02-06T10:36:37.344Z] [IngestWebsite] INFO: Total Chunks Processed: 1
+[2026-02-06T10:44:13.394Z] [ChatRoute] INFO: Generating response for: tell me about yourself ?
+[2026-02-06T10:44:29.690Z] [ChatRoute] INFO: Generating response for: what services you provide ?
+[2026-02-06T10:45:01.264Z] [ChatRoute] INFO: Generating response for: what services ajay arakh provide ?

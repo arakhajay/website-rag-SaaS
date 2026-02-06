@@ -34,10 +34,42 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
-    const isLoginRoute = request.nextUrl.pathname.startsWith('/login')
-    const isAuthCallbackRoute = request.nextUrl.pathname.startsWith('/auth')
-    const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard')
+    const pathname = request.nextUrl.pathname
+    const isLoginRoute = pathname.startsWith('/login')
+    const isAuthCallbackRoute = pathname.startsWith('/auth')
+    const isProtectedRoute = pathname.startsWith('/dashboard')
+    const isAdminRoute = pathname.startsWith('/admin')
 
+    // ============================================
+    // ADMIN ROUTE PROTECTION
+    // ============================================
+    if (isAdminRoute) {
+        // Not authenticated → redirect to login
+        if (!user) {
+            const url = request.nextUrl.clone()
+            url.pathname = '/login'
+            url.searchParams.set('redirect', pathname)
+            return NextResponse.redirect(url)
+        }
+
+        // Check if user is super_admin
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+
+        if (profile?.role !== 'super_admin') {
+            // Not a super_admin → return 404 to hide admin route existence
+            const url = request.nextUrl.clone()
+            url.pathname = '/not-found'
+            return NextResponse.rewrite(url)
+        }
+    }
+
+    // ============================================
+    // DASHBOARD ROUTE PROTECTION (commented out for now)
+    // ============================================
     // If user is trying to access protected route but hasn't logged in, redirect to login
     /*
     if (!user && isProtectedRoute) {

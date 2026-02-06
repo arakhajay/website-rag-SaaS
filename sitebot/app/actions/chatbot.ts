@@ -94,11 +94,20 @@ export async function deleteChatbot(chatbotId: string) {
 }
 
 export async function getChatbots() {
-    const adminClient = createAdminClient()
+    const supabase = await createClient()
 
-    const { data: chatbots, error } = await adminClient
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+        return { success: false, error: 'Not authenticated', chatbots: [] }
+    }
+
+    // Use authenticated client - RLS will filter to user's chatbots only
+    const { data: chatbots, error } = await supabase
         .from('chatbots')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
     if (error) {
@@ -109,12 +118,21 @@ export async function getChatbots() {
 }
 
 export async function getChatbot(chatbotId: string) {
-    const adminClient = createAdminClient()
+    const supabase = await createClient()
 
-    const { data: chatbot, error } = await adminClient
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+        return { success: false, error: 'Not authenticated', chatbot: null }
+    }
+
+    // Use authenticated client - RLS will ensure user owns this chatbot
+    const { data: chatbot, error } = await supabase
         .from('chatbots')
         .select('*')
         .eq('id', chatbotId)
+        .eq('user_id', user.id)
         .single()
 
     if (error) {
