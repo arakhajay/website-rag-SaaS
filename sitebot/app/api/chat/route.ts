@@ -5,6 +5,7 @@ import { OpenAIEmbeddings } from '@langchain/openai'
 import { generateAndRunSQL } from '@/lib/sql-agent'
 import { logInfo, logError } from '@/lib/logger'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { PLANS } from '@/lib/dodo'
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30
@@ -103,6 +104,56 @@ export async function POST(req: Request) {
 
         const lastMessage = messages[messages.length - 1]
         const userQuery = lastMessage.content
+
+        // --- Subscription Usage Check ---
+        const adminClient = createAdminClient()
+        
+        // 1. Get Chatbot Owner
+        const { data: chatbotData, error: botError } = await adminClient
+            .from('chatbots')
+            .select('user_id')
+            .eq('id', chatbotId)
+            .single()
+
+        if (botError || !chatbotData) {
+            return new Response('Chatbot not found', { status: 404 })
+        }
+
+        // 2. Get Subscription
+        const { data: subscription } = await adminClient
+            .from('subscriptions')
+            .select('id, plan_name, usage_messages, status')
+            .eq('user_id', chatbotData.user_id)
+            .in('status', ['active', 'on_hold', 'pending']) // Pending counts as active for usage
+            .maybeSingle()
+        
+        // 3. Determine Limits
+        const planSlug = subscription?.plan_name || 'free'
+        const planConfig = PLANS[planSlug] || PLANS.free
+        const usage = subscription?.usage_messages || 0
+
+        // 4. Enforce Limit
+        // If status is 'pending' (just bought), we allow usage.
+        // If status is undefined (no record), uses free plan (0 messages).
+        if (usage >= planConfig.messagesPerMonth) {
+            console.warn(`[ChatRoute] Usage limit reached for bot ${chatbotId} (Plan: ${planSlug}, Usage: ${usage}/${planConfig.messagesPerMonth})`)
+            return new Response(
+                JSON.stringify({ error: `Message limit reached. Your ${planConfig.name} allows ${planConfig.messagesPerMonth} messages/month. Please upgrade.` }), 
+                { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
+
+        // 5. Increment Usage (Async - don't block response)
+        // We do this BEFORE the AI response to count the user query?
+        // Or AFTER to count successful generation?
+        // Usually counted on request received.
+        if (subscription) {
+            // Fire and forget increment - Use .then() to trigger execution without awaiting
+            adminClient.rpc('increment_usage_messages', { row_id: subscription.id })
+                .then(({ error }) => {
+                    if (error) console.error('[ChatRoute] Failed to increment usage:', error)
+                })
+        }
 
         // --- Parallel Execution: Vector Search + SQL Search ---
 

@@ -1,6 +1,6 @@
-﻿# 🤖 SiteBot - RAG-Powered Chatbot SaaS
+﻿# ⚡ Zivox Agent - RAG-Powered Chatbot SaaS
 
-A full-stack SaaS platform for creating AI chatbots trained on your own data. Built with Next.js 16, Supabase, Pinecone, and OpenAI.
+A professional, RAG-powered AI chatbot platform creating custom assistants trained on your own data. Featuring a premium dark-themed UI, robust analytics, and seamless integration. Built with Next.js 16, Supabase, Pinecone, and OpenAI.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.1.4-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
@@ -30,6 +30,8 @@ A full-stack SaaS platform for creating AI chatbots trained on your own data. Bu
 | ⚡ **Guidelines & Workflows** | ✅ Complete | Behavioral control & Structured processes                    |
 | 📈 **Analytics Dashboard**    | ✅ Complete | Usage stats, AI Analyst, conversation metrics, session charts |
 | 🏠 **Dashboard Home**         | ✅ Complete | Real-time usage, training stats, and daily session chart     |
+| 📜 **Legal Pages**            | ✅ Complete | Professional Terms of Service & Privacy Policy pages         |
+| 🎨 **Design System**          | ✅ Complete | Premium Dark Mode, Glassmorphism, Inter Typography           |
 
 ### 🚧 Pending Modules
 

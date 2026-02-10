@@ -22,7 +22,7 @@ export default function LandingPage() {
                         Ready to Automate Your Business?
                     </h2>
                     <p className="text-muted-foreground text-xl">
-                        Join thousands of founders saving time and money with SiteBot.
+                        Join thousands of founders saving time and money with Zivox Agent.
                     </p>
                     <Link href="/signup">
                         <Button size="lg" className="h-12 px-8 text-lg bg-indigo-600 hover:bg-indigo-700">

@@ -1,7 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { verifyAdmin } from '@/lib/admin/verify-admin'
+import { verifyAdminOrThrow as verifyAdmin } from '@/lib/admin/verify-admin'
 import { logAdminAction } from './admin-analytics'
 import { revalidatePath } from 'next/cache'
 

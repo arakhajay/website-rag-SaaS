@@ -156,7 +156,7 @@ export async function adminGetAllUsers(
         .select('user_id')
         .in('user_id', userIds)
 
-    // Aggregate chatbot counts
+    // Aggregate counts
     const countMap: Record<string, number> = {}
     chatbotCounts?.forEach(c => {
         countMap[c.user_id] = (countMap[c.user_id] || 0) + 1
@@ -260,6 +260,35 @@ export async function adminBanUser(
 
     return { success: true }
 }
+
+// ============================================
+// DELETE USER
+// ============================================
+
+export async function adminDeleteUser(userId: string): Promise<{ success: boolean; error?: string }> {
+    await verifyAdminOrThrow()
+    const supabase = createAdminClient()
+
+    // Delete from auth.users (cascades to profiles usually, but we should be sure)
+    const { error } = await supabase.auth.admin.deleteUser(userId)
+
+    if (error) {
+        return { success: false, error: error.message }
+    }
+
+    // Prepare log data (before full deletion if we wanted to capture email, but auth deletion is done)
+    // We log after successful deletion
+    const { userId: adminId } = await verifyAdminOrThrow()
+    await supabase.from('admin_audit_log').insert({
+        admin_id: adminId,
+        action: 'delete_user',
+        target_user_id: userId,
+        details: { deleted: true },
+    })
+
+    return { success: true }
+}
+
 
 // ============================================
 // CHANGE USER PLAN

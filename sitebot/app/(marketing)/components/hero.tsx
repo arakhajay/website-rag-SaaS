@@ -11,7 +11,7 @@ export function Hero() {
                     <span className="text-primary bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600">While You Sleep.</span>
                 </h1>
                 <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
-                    Train a custom ChatGPT on your website, PDFs, and Notion docs in 2 minutes. Capture leads, resolve support tickets, and trigger complex workflows automatically.
+                    Train a custom AI chatbot on your website, PDFs, and documents in 2 minutes. Capture leads, resolve support tickets, and automate workflows—24/7.
                 </p>
                 <div className="space-x-4">
                     <Link href="/signup">
@@ -19,14 +19,14 @@ export function Hero() {
                     </Link>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                    Join 10,000+ businesses saving 20 hours/week. No credit card required.
+                    Join thousands of founders saving time and money. No credit card required.
                 </p>
 
                 {/* Hero Visual */}
                 <div className="mt-10 relative w-full aspect-video rounded-xl border bg-muted/50 overflow-hidden shadow-xl">
                     <Image
                         src="/images/hero-visual.gif"
-                        alt="SiteBot AI Agent in Action"
+                        alt="Zivox Agent in Action"
                         fill
                         className="object-cover"
                         priority

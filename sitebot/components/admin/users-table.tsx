@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { AdminUser, adminBanUser, adminChangeUserPlan } from '@/app/actions/admin-users'
+import { AdminUser, adminBanUser, adminChangeUserPlan, adminDeleteUser } from '@/app/actions/admin-users'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -36,6 +36,7 @@ import {
     Loader2,
     ChevronLeft,
     ChevronRight,
+    Trash,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { useRouter } from 'next/navigation'
@@ -104,6 +105,21 @@ export function UsersTable({
                     ...planLimits[plan]
                 } : u
             ))
+        }
+        setLoadingAction(null)
+    }
+
+    const handleDelete = async (user: AdminUser) => {
+        if (!confirm(`Are you sure you want to PERMANENTLY delete user ${user.email}? This action cannot be undone.`)) {
+            return
+        }
+
+        setLoadingAction(user.id)
+        const result = await adminDeleteUser(user.id)
+        if (result.success) {
+            setUsers(users.filter(u => u.id !== user.id))
+        } else {
+            alert(result.error || 'Failed to delete user')
         }
         setLoadingAction(null)
     }
@@ -247,6 +263,14 @@ export function UsersTable({
                                                             Ban User
                                                         </DropdownMenuItem>
                                                     )}
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem
+                                                        onClick={() => handleDelete(user)}
+                                                        className="text-destructive focus:text-destructive"
+                                                    >
+                                                        <Trash className="mr-2 h-4 w-4" />
+                                                        Delete User
+                                                    </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem disabled>
                                                         <Eye className="mr-2 h-4 w-4" />

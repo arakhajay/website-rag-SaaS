@@ -2,6 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getSubscriptionWithPlan } from '@/app/actions/subscription'
+
 
 export async function createChatbot(name: string, baseUrl: string) {
     const supabase = await createClient()
@@ -10,41 +12,44 @@ export async function createChatbot(name: string, baseUrl: string) {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (!user) {
-        // Try using admin client to create for demo purposes
-        // In production, you'd want to enforce login
-        const adminClient = createAdminClient()
-
-        // Get or create a demo user
-        const { data: existingUsers } = await adminClient
-            .from('profiles')
-            .select('id')
-            .limit(1)
-
-        if (existingUsers && existingUsers.length > 0) {
-            const userId = existingUsers[0].id
-
-            const { data: newBot, error } = await adminClient
-                .from('chatbots')
-                .insert({
-                    name,
-                    base_url: baseUrl,
-                    user_id: userId
-                })
-                .select()
-                .single()
-
-            if (error) {
-                console.error('Admin insert error:', error)
-                return { success: false, error: error.message }
-            }
-
-            return { success: true, chatbot: newBot }
-        }
-
-        return { success: false, error: 'No users found. Please sign up first.' }
+        return { success: false, error: 'Authentication and active subscription required.' }
     }
 
     // User is authenticated - use normal client
+    
+    // 1. Check Subscription Limits
+    const { plan } = await getSubscriptionWithPlan()
+    const currentPlan = plan // If null, means something is wrong or Free plan handling needs fallback. 
+                             // getSubscriptionWithPlan handles "No Plan" by returning null plan? 
+                             // Wait, I updated dodo.ts to include 'free'. 
+                             // If subscription is null (no record), getSubscriptionWithPlan returns plan: null?
+                             // Let's assume safely.
+
+    if (!currentPlan) {
+         // Should not happen if 'free' is default. But if no record, effectively free.
+         // If no record, we should probably block or allow default?
+         // User said "unless user buy".
+         // If "No Plan", limit is 0.
+         return { success: false, error: 'You must have an active subscription to create a chatbot.' }
+    }
+
+    // Check count
+    const { count, error: countError } = await supabase
+        .from('chatbots')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+
+    if (countError) {
+        return { success: false, error: 'Failed to check usage limits.' }
+    }
+
+    if ((count || 0) >= currentPlan.maxChatbots) {
+        return { 
+            success: false, 
+            error: `Plan limit reached. Your ${currentPlan.name} allows ${currentPlan.maxChatbots} chatbot(s). Please upgrade.` 
+        }
+    }
+
     const { data: newBot, error } = await supabase
         .from('chatbots')
         .insert({
@@ -180,12 +185,41 @@ export async function deleteTrainingSource(sourceId: string) {
 // Update signature to allow FormData or string content
 export async function addTrainingSource(chatbotId: string, type: 'website' | 'text' | 'file' | 'csv', content: string | FormData) {
     const adminClient = createAdminClient()
+    const supabase = await createClient() // For auth check
+
+    // 0. Verify Auth & Plan Limits
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, error: "Unauthorized" }
+
+    const { plan } = await getSubscriptionWithPlan()
+    if (!plan) return { success: false, error: "Active subscription required." }
+
+    // Check ownership of chatbot (since we use adminClient for insert)
+    const { data: botCheck } = await supabase
+        .from('chatbots')
+        .select('id')
+        .eq('id', chatbotId)
+        .eq('user_id', user.id)
+        .single()
+    
+    if (!botCheck) return { success: false, error: "Chatbot not found or access denied." }
+
+    // Check Sources Count Limit
+    const { count } = await adminClient
+        .from('training_sources')
+        .select('*', { count: 'exact', head: true })
+        .eq('chatbot_id', chatbotId)
+    
+    if ((count || 0) >= plan.maxTrainingSources) {
+         return { success: false, error: `Training source limit reached (${plan.maxTrainingSources}). Upgrade to add more.` }
+    }
 
     let sourceName = ''
     let fileBuffer: Buffer | null = null
     let fileType = '' // 'pdf' or 'csv' etc
 
-    // 1. Prepare Content
+    // 1. Prepare Content & Check Size Limit
+    let contentSizeMB = 0
     if (content instanceof FormData) {
         const file = content.get('file') as File
         if (!file) return { success: false, error: "No file provided" }
@@ -193,8 +227,14 @@ export async function addTrainingSource(chatbotId: string, type: 'website' | 'te
         const arrayBuffer = await file.arrayBuffer()
         fileBuffer = Buffer.from(arrayBuffer)
         fileType = file.name.split('.').pop()?.toLowerCase() || ''
+        contentSizeMB = file.size / (1024 * 1024)
     } else {
         sourceName = String(content).slice(0, 50) + (String(content).length > 50 ? '...' : '')
+        contentSizeMB = Buffer.byteLength(String(content)) / (1024 * 1024)
+    }
+
+    if (contentSizeMB > plan.maxTrainingSizeMB) {
+        return { success: false, error: `File too large. Limit is ${plan.maxTrainingSizeMB}MB.` }
     }
 
     // 2. Create Initial DB Record
@@ -214,7 +254,7 @@ export async function addTrainingSource(chatbotId: string, type: 'website' | 'te
     // 3. Trigger Ingestion
     try {
         const { ingestWebsite, ingestText, ingestFile, ingestCSV } = await import('./ingest')
-        let result = { success: false, error: 'Unknown type' }
+        let result: { success: boolean; error?: string; [key: string]: any } = { success: false, error: 'Unknown type' }
 
         if (type === 'website') {
             result = await ingestWebsite(chatbotId, String(content), source.id)

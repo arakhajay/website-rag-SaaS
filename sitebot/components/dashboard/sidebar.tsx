@@ -13,7 +13,9 @@ import {
     ChevronDown,
     Bot,
     LogOut,
-    Share2
+    Share2,
+    CreditCard,
+    Sparkles
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -26,24 +28,27 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
-export function Sidebar() {
+interface SidebarProps {
+    subscriptionPlan?: string | null
+    subscriptionStatus?: string | null
+    isSubscribed?: boolean
+}
+
+export function Sidebar({ subscriptionPlan, subscriptionStatus, isSubscribed }: SidebarProps) {
     const pathname = usePathname()
     const router = useRouter()
     const supabase = createClient()
 
     // Extract chatbot ID from URL if present
-    // URL patterns: /dashboard/chatbot/[id]/training, /dashboard/chatbot/[id]
     const chatbotIdMatch = pathname.match(/\/dashboard\/chatbot\/([^/]+)/)
     const currentChatbotId = chatbotIdMatch ? chatbotIdMatch[1] : null
 
-    // Build navigation items - some are dynamic based on current chatbot
     const getNavItems = () => {
         const baseItems = [
             { name: 'Home', href: '/dashboard', icon: LayoutDashboard },
         ]
 
         if (currentChatbotId) {
-            // When viewing a specific chatbot, show chatbot-specific routes
             baseItems.push(
                 { name: 'Content & Training', href: `/dashboard/chatbot/${currentChatbotId}/training`, icon: FileText },
                 { name: 'Bot Settings', href: `/dashboard/chatbot/${currentChatbotId}/settings`, icon: Settings },
@@ -53,7 +58,6 @@ export function Sidebar() {
                 { name: 'Analytics', href: `/dashboard/chatbot/${currentChatbotId}/analytics`, icon: BarChart3 },
             )
         } else {
-            // Generic routes when no chatbot is selected - show all tabs consistently
             baseItems.push(
                 { name: 'Content & Training', href: '/dashboard/training', icon: FileText },
                 { name: 'Bot Settings', href: '/dashboard/settings', icon: Settings },
@@ -64,7 +68,6 @@ export function Sidebar() {
             )
         }
 
-        // Always show these
         baseItems.push(
             { name: 'Integrations', href: '/dashboard/integrations', icon: LinkIcon },
         )
@@ -80,6 +83,15 @@ export function Sidebar() {
         router.push('/login')
     }
 
+    const planDisplayName = subscriptionPlan || 'No Plan'
+    const statusColor = subscriptionStatus === 'active'
+        ? 'text-green-500'
+        : subscriptionStatus === 'pending'
+            ? 'text-yellow-500'
+            : subscriptionStatus === 'on_hold'
+                ? 'text-orange-500'
+                : 'text-muted-foreground'
+
     return (
         <div className="flex h-screen w-64 flex-col border-r bg-background">
             {/* Header / Bot Switcher */}
@@ -91,7 +103,7 @@ export function Sidebar() {
                                 <div className="h-6 w-6 rounded bg-primary/20 flex items-center justify-center">
                                     <Bot className="h-4 w-4 text-primary" />
                                 </div>
-                                sitebot
+                                Zivox Agent
                             </span>
                             <ChevronDown className="h-4 w-4 opacity-50" />
                         </Button>
@@ -131,17 +143,51 @@ export function Sidebar() {
                 })}
             </div>
 
+            {/* Subscription / Upgrade Banner */}
+            {!isSubscribed && (
+                <div className="px-3 pb-2">
+                    <Link href="/dashboard/pricing">
+                        <div className="rounded-lg bg-gradient-to-r from-primary/10 to-violet-500/10 border border-primary/20 p-3 hover:border-primary/40 transition-colors cursor-pointer">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Sparkles className="h-4 w-4 text-primary" />
+                                <span className="text-sm font-semibold text-primary">Upgrade Plan</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">Get more messages, chatbots, and features</p>
+                        </div>
+                    </Link>
+                </div>
+            )}
+
             {/* Footer / User Profile */}
             <div className="p-4 border-t bg-muted/20">
-                <div className="flex items-center gap-3 mb-4 px-2">
-                    <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
+                <div className="flex items-center gap-3 mb-3 px-2">
+                    <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-xs">
                         CN
                     </div>
                     <div className="flex-1 overflow-hidden">
                         <p className="text-sm font-medium truncate">Company Name</p>
-                        <p className="text-xs text-muted-foreground truncate">Free Plan</p>
+                        <div className="flex items-center gap-1.5">
+                            <CreditCard className={cn("h-3 w-3", statusColor)} />
+                            <p className={cn("text-xs truncate", statusColor)}>
+                                {planDisplayName}
+                            </p>
+                        </div>
                     </div>
                 </div>
+
+                {isSubscribed && (
+                    <Link href="/dashboard/pricing">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-start text-muted-foreground hover:text-primary mb-1"
+                        >
+                            <CreditCard className="mr-2 h-4 w-4" />
+                            Manage Plan
+                        </Button>
+                    </Link>
+                )}
+
                 <Button
                     variant="ghost"
                     size="sm"

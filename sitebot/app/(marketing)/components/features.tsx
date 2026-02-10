@@ -118,6 +118,32 @@ export function Features() {
                     </div>
                 </div>
             </div>
+
+            {/* Feature 4: Data Sources (New Section) */}
+            <div className="space-y-8 text-center pt-8">
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Your Data, Your Brain.</h2>
+                <p className="mx-auto max-w-[700px] text-lg text-muted-foreground">
+                    Connect any data source and watch your AI learn instantly.
+                </p>
+                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 pt-4">
+                    <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6 space-y-2">
+                        <h3 className="font-semibold text-xl">Website Crawler</h3>
+                        <p className="text-sm text-muted-foreground">Enter your URL, we index every page automatically.</p>
+                    </div>
+                    <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6 space-y-2">
+                        <h3 className="font-semibold text-xl">Document Upload</h3>
+                        <p className="text-sm text-muted-foreground">Drag & drop PDFs, CSVs, DOCX files.</p>
+                    </div>
+                    <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6 space-y-2">
+                        <h3 className="font-semibold text-xl">Notion & Drive</h3>
+                        <p className="text-sm text-muted-foreground">One-click integration with your knowledge base.</p>
+                    </div>
+                    <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6 space-y-2">
+                        <h3 className="font-semibold text-xl">Manual Q&A</h3>
+                        <p className="text-sm text-muted-foreground">Add custom Q&A pairs for precise control.</p>
+                    </div>
+                </div>
+            </div>
         </section>
     )
 }

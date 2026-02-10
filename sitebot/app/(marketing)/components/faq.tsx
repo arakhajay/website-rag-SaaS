@@ -21,7 +21,7 @@ export function FAQ() {
                 <AccordionItem value="item-2">
                     <AccordionTrigger>Can I remove the &apos;Powered By&apos; branding?</AccordionTrigger>
                     <AccordionContent>
-                        Yes! Our Professional ($89/mo) and Business ($239/mo) plans allow you to remove our branding and use your own custom logo and colors.
+                        Yes! Our Professional ($129/mo) and Enterprise ($399/mo) plans allow you to remove our branding and use your own custom logo and colors.
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-3">

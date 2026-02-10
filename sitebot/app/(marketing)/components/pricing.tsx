@@ -1,9 +1,15 @@
 import Link from "next/link"
-import { Check } from "lucide-react"
+import { Check, Sparkles } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { PLANS, PlanConfig } from "@/lib/dodo"
+import { cn } from "@/lib/utils"
 
 export function Pricing() {
+    // Select specific plans in order
+    const planOrder = ['starter', 'growth', 'professional', 'enterprise']
+    const displayPlans = planOrder.map(slug => PLANS[slug]).filter(Boolean) as PlanConfig[]
+
     return (
         <section id="pricing" className="container py-8 md:py-12 lg:py-24">
             <div className="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center">
@@ -11,128 +17,67 @@ export function Pricing() {
                     Simple, Transparent Pricing.
                 </h2>
                 <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-                    Start for free. Scale as you grow. Cancel anytime.
+                    Start with a <strong>7-day free trial</strong>. No commitment, cancel anytime.
                 </p>
             </div>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-8 lg:gap-12 pt-12">
-                {/* Starter Plan */}
-                <div className="flex flex-col rounded-xl border bg-background p-8 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="space-y-2">
-                        <h3 className="font-bold text-2xl">Starter</h3>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-4xl font-bold">$39</span>
-                            <span className="text-muted-foreground">/mo</span>
-                        </div>
-                        <p className="text-sm text-green-600 font-medium">Reduced from $49</p>
-                        <p className="text-muted-foreground pt-2">Solopreneurs & Hobbyists</p>
-                    </div>
-                    <ul className="my-8 space-y-3">
-                        <li className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-primary" />
-                            <span className="text-sm">1 Chatbot</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-primary" />
-                            <span className="text-sm">2,000 Messages/mo</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-primary" />
-                            <span className="text-sm">10M Char Storage</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-primary" />
-                            <span className="text-sm">Web, PDF, Text Sources</span>
-                        </li>
-                    </ul>
-                    <div className="mt-auto">
-                        <Link href="/signup">
-                            <Button className="w-full h-12" variant="outline">Start Free Trial</Button>
-                        </Link>
-                    </div>
-                </div>
+            
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4 lg:gap-8 pt-12">
+                {displayPlans.map((plan) => {
+                    const isPopular = plan.popular
+                    return (
+                        <div 
+                            key={plan.slug}
+                            className={cn(
+                                "flex flex-col rounded-xl border bg-background p-6 shadow-sm hover:shadow-md transition-shadow relative",
+                                isPopular && "shadow-xl ring-2 ring-primary scale-105 z-10"
+                            )}
+                        >
+                            {isPopular && (
+                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-sm font-semibold text-primary-foreground shadow-sm">
+                                    Most Popular
+                                </div>
+                            )}
+                            
+                            <div className="space-y-2">
+                                <h3 className="font-bold text-2xl">{plan.name}</h3>
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-3xl font-bold">{plan.priceDisplay}</span>
+                                    <span className="text-muted-foreground text-sm">/mo</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground pt-1 min-h-[40px]">
+                                    {plan.slug === 'starter' && "For individuals & new merchants"}
+                                    {plan.slug === 'growth' && "For growing businesses"}
+                                    {plan.slug === 'professional' && "For power users & small teams"}
+                                    {plan.slug === 'enterprise' && "For large organizations"}
+                                </p>
+                            </div>
 
-                {/* Professional Plan */}
-                <div className="flex flex-col rounded-xl border bg-background p-8 shadow-xl ring-2 ring-primary relative scale-105">
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-sm font-semibold text-primary-foreground shadow-sm">
-                        Most Popular
-                    </div>
-                    <div className="space-y-2">
-                        <h3 className="font-bold text-2xl">Professional</h3>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-4xl font-bold">$89</span>
-                            <span className="text-muted-foreground">/mo</span>
-                        </div>
-                        <p className="text-sm text-green-600 font-medium">Reduced from $99</p>
-                        <p className="text-muted-foreground pt-2">Growing Startups</p>
-                    </div>
-                    <ul className="my-8 space-y-3">
-                        <li className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-primary" />
-                            <span className="text-sm">5 Chatbots</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-primary" />
-                            <span className="text-sm">10,000 Messages/mo</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-primary" />
-                            <span className="text-sm"><strong>Remove Branding</strong></span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-primary" />
-                            <span className="text-sm">Notion & Drive Integration</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-primary" />
-                            <span className="text-sm">GPT-4o Access</span>
-                        </li>
-                    </ul>
-                    <div className="mt-auto">
-                        <Link href="/signup">
-                            <Button className="w-full h-12">Get Started</Button>
-                        </Link>
-                    </div>
-                </div>
+                            <ul className="my-6 space-y-2 flex-1">
+                                {plan.features.map((feature, i) => (
+                                    <li key={i} className="flex items-start gap-2">
+                                        <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                                        <span className="text-xs sm:text-sm text-left">{feature}</span>
+                                    </li>
+                                ))}
+                            </ul>
 
-                {/* Business Plan */}
-                <div className="flex flex-col rounded-xl border bg-background p-8 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="space-y-2">
-                        <h3 className="font-bold text-2xl">Business</h3>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-4xl font-bold">$239</span>
-                            <span className="text-muted-foreground">/mo</span>
+                            <div className="mt-auto pt-4">
+                                <Link href={plan.slug === 'enterprise' ? "/contact" : "/signup"}>
+                                    <Button 
+                                        className="w-full" 
+                                        variant={isPopular ? "default" : "outline"}
+                                    >
+                                        {plan.slug === 'enterprise' ? "Contact Sales" : "Start Free Trial"}
+                                    </Button>
+                                </Link>
+                            </div>
                         </div>
-                        <p className="text-sm text-green-600 font-medium">Reduced from $249</p>
-                        <p className="text-muted-foreground pt-2">Agencies & Large Teams</p>
-                    </div>
-                    <ul className="my-8 space-y-3">
-                        <li className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-primary" />
-                            <span className="text-sm">20 Chatbots</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-primary" />
-                            <span className="text-sm">40,000 Messages/mo</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-primary" />
-                            <span className="text-sm">White Label + Custom Domain</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-primary" />
-                            <span className="text-sm">API & Webhooks</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-primary" />
-                            <span className="text-sm">Dedicated Manager</span>
-                        </li>
-                    </ul>
-                    <div className="mt-auto">
-                        <Link href="/contact">
-                            <Button className="w-full h-12" variant="outline">Contact Sales</Button>
-                        </Link>
-                    </div>
-                </div>
+                    )
+                })}
+            </div>
+            
+            <div className="mx-auto mt-12 max-w-[58rem] text-center text-muted-foreground">
+                <p>Looking for a custom solution? <Link href="/contact" className="underline underline-offset-4 hover:text-primary">Contact us</Link>.</p>
             </div>
         </section>
     )

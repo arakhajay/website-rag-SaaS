@@ -144,3 +144,16 @@
 [2026-02-06T10:44:13.394Z] [ChatRoute] INFO: Generating response for: tell me about yourself ?
 [2026-02-06T10:44:29.690Z] [ChatRoute] INFO: Generating response for: what services you provide ?
 [2026-02-06T10:45:01.264Z] [ChatRoute] INFO: Generating response for: what services ajay arakh provide ?
+[2026-02-10T08:13:56.360Z] [ChatRoute] INFO: Generating response for: what are my services /
+[2026-02-10T08:51:19.914Z] [ChatRoute] INFO: Generating response for: hello 
+[2026-02-10T08:51:32.788Z] [ChatRoute] INFO: Generating response for: what are your services ?
+[2026-02-10T15:06:35.536Z] [IngestWebsite] INFO: Starting crawl for https://arakhajay.vercel.app/ (SourceID: undefined)
+[2026-02-10T15:06:35.545Z] [IngestWebsite] INFO: Submitting crawl job...
+[2026-02-10T15:06:36.988Z] [IngestWebsite] INFO: Job started: 019c4817-104e-71aa-a148-b3011aba013f. Polling...
+[2026-02-10T15:06:42.884Z] [IngestWebsite] INFO: Crawl completed. Pages: 1
+[2026-02-10T15:06:49.352Z] [IngestWebsite] INFO: Total Chunks Processed: 1
+[2026-02-10T15:08:23.956Z] [IngestWebsite] INFO: Starting crawl for https://expo.dev/blog/building-high-quality-uis-with-expo-and-nativewind (SourceID: 78eeae95-5c0f-49f6-8051-ddcf68b9fcd0)
+[2026-02-10T15:08:23.959Z] [IngestWebsite] INFO: Submitting crawl job...
+[2026-02-10T15:08:25.054Z] [IngestWebsite] INFO: Job started: 019c4818-b613-74fe-b002-36e4299477e3. Polling...
+[2026-02-10T15:08:38.979Z] [IngestWebsite] INFO: Crawl completed. Pages: 1
+[2026-02-10T15:08:51.823Z] [IngestWebsite] INFO: Total Chunks Processed: 26
