@@ -1,0 +1,56 @@
+name: Deploy to AWS Elastic Beanstalk
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install Dependencies
+        working-directory: ./sitebot
+        run: npm ci
+
+      - name: Build Application
+        working-directory: ./sitebot
+        run: npm run build
+
+      - name: Prepare Standalone Build
+        working-directory: ./sitebot
+        run: |
+          # Create destination directories
+          mkdir -p .next/standalone/.next
+          mkdir -p .next/standalone/public
+
+          # Copy static files (critical for Next.js)
+          cp -r .next/static .next/standalone/.next/
+          cp -r public/* .next/standalone/public/ || true
+          
+          # Copy Procfile to root of standalone
+          cp Procfile .next/standalone/Procfile
+
+      - name: Generate Deployment Package
+        working-directory: ./sitebot/.next/standalone
+        run: zip -r ../../../deploy.zip .
+
+      - name: Deploy to Elastic Beanstalk
+        uses: einaregilsson/beanstalk-deploy@v21
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: ZivoxAgent
+          environment_name: ZivoxAgent-env
+          version_label: "ver-${{ github.sha }}"
+          region: us-east-1
+          deployment_package: deploy.zip
