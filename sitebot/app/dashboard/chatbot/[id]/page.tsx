@@ -12,14 +12,12 @@ export default async function ChatbotPage({
     const { id } = await params
     const supabase = await createClient()
 
-    let {
-        data: { user },
+    const {
+        data: { user: authUser },
     } = await supabase.auth.getUser()
 
-    // Mock user for bypass mode
-    if (!user) {
-        user = { id: '50dfebd8-53b6-4e4f-9c77-4e9ec445948c' } as any
-    }
+    // Mock user for bypass mode or use auth user
+    const user: { id: string } = authUser || { id: '50dfebd8-53b6-4e4f-9c77-4e9ec445948c' }
 
     let { data: chatbot } = await supabase
         .from('chatbots')
