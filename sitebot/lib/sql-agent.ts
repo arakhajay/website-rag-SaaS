@@ -50,7 +50,7 @@ export async function generateAndRunSQL(chatbotId: string, userQuery: string): P
 
                 // Add data rows
                 for (const row of rows) {
-                    const values = headers.map(h => String(row[h] || '').slice(0, 50)) // Truncate long values
+                    const values = headers.map((h: string) => String(row[h] || '').slice(0, 50)) // Truncate long values
                     dataContext += `| ${values.join(' | ')} |\n`
                 }
             }

@@ -15,6 +15,7 @@ export interface Lead {
     created_at: string
     chatbot_id: string
     custom_data?: any
+    last_contact_at?: string
 }
 
 export async function getLeads(chatbotId: string) {

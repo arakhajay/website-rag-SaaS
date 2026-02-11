@@ -43,7 +43,7 @@ async function debugRetrieval() {
             console.log(`\n--- Match ${i + 1} (Score: ${match.score}) ---`)
             console.log(`ID: ${match.id}`)
             console.log(`Metadata:`, match.metadata)
-            console.log(`Content Preview: ${(match.metadata?.text || match.metadata?.content || '').slice(0, 200)}...`)
+            console.log(`Content Preview: ${String(match.metadata?.text || match.metadata?.content || '').slice(0, 200)}...`)
         })
 
     } catch (error) {
