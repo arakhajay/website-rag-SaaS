@@ -52,5 +52,5 @@ jobs:
           application_name: ZivoxAgent
           environment_name: ZivoxAgent-env
           version_label: "ver-${{ github.sha }}"
-          region: us-east-1
+          region: ap-south-1
           deployment_package: deploy.zip
