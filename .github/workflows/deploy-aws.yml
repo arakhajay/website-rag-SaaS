@@ -53,6 +53,9 @@ jobs:
           # Copy Procfile to root of standalone
           cp Procfile .next/standalone/Procfile
 
+          # Copy .platform config for nginx (proxy timeouts)
+          cp -r .platform .next/standalone/.platform || true
+
       - name: Generate Deployment Package
         working-directory: ./sitebot/.next/standalone
         run: zip -r ../../../deploy.zip .
