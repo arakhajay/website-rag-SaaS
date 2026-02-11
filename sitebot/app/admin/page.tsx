@@ -16,6 +16,8 @@ import {
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminOverviewPage() {
     // Fetch all data in parallel
     const [stats, recentSignups, revenueStats] = await Promise.all([

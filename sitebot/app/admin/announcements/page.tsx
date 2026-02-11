@@ -6,6 +6,8 @@ import { Bell, History, Megaphone, AlertTriangle, CheckCircle, Info, Wrench } fr
 import { formatDistanceToNow } from 'date-fns'
 import { AnnouncementsManager } from '@/components/admin/announcements-manager'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminAnnouncementsPage() {
     const [announcements, auditLog] = await Promise.all([
         getAnnouncements().catch(() => []),

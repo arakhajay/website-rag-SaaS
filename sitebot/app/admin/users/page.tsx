@@ -2,6 +2,8 @@ import { adminGetAllUsers } from '@/app/actions/admin-users'
 import { UsersTable } from '@/components/admin/users-table'
 import { Users } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
     searchParams: Promise<{ search?: string; page?: string }>
 }
