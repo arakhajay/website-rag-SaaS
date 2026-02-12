@@ -20,7 +20,11 @@ export async function updateSession(request: NextRequest) {
                         request,
                     })
                     cookiesToSet.forEach(({ name, value, options }) =>
-                        supabaseResponse.cookies.set(name, value, options)
+                        supabaseResponse.cookies.set(name, value, {
+                            ...options,
+                            // Ensure cookies work behind load balancer (HTTPS termination at LB, HTTP to instance)
+                            secure: request.headers.get('x-forwarded-proto') === 'https',
+                        })
                     )
                 },
             },
@@ -30,17 +34,9 @@ export async function updateSession(request: NextRequest) {
     // IMPORTANT: Avoid writing any logic between createServerClient and
     // supabase.auth.getUser(). A simple mistake can make it very hard to debug
     // issues with users being randomly logged out.
-    let user = null
-    try {
-        const authResult = await Promise.race([
-            supabase.auth.getUser(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Auth timeout')), 5000))
-        ]) as { data: { user: any } }
-        user = authResult.data.user
-    } catch (e) {
-        // Auth timed out or failed — treat as unauthenticated
-        console.error('Middleware auth check failed:', e)
-    }
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
 
     const pathname = request.nextUrl.pathname
     const isLoginRoute = pathname.startsWith('/login')
@@ -76,25 +72,21 @@ export async function updateSession(request: NextRequest) {
     }
 
     // ============================================
-    // DASHBOARD ROUTE PROTECTION (commented out for now)
+    // DASHBOARD ROUTE PROTECTION
     // ============================================
     // If user is trying to access protected route but hasn't logged in, redirect to login
-    /*
     if (!user && isProtectedRoute) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)
     }
-    */
 
     // If user is already logged in and tries to access login page, redirect to dashboard
-    /*
     if (user && isLoginRoute) {
         const url = request.nextUrl.clone()
         url.pathname = '/dashboard'
         return NextResponse.redirect(url)
     }
-    */
 
     // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
     // creating a new response logic, you must step through the supabaseResponse object.

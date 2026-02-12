@@ -10,16 +10,7 @@ export default async function DashboardLayout({
 }) {
     const supabase = await createClient()
 
-    let user = null
-    try {
-        const authResult = await Promise.race([
-            supabase.auth.getUser(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Auth timeout')), 5000))
-        ]) as { data: { user: any } }
-        user = authResult.data.user
-    } catch (e) {
-        console.error('Dashboard auth check failed:', e)
-    }
+    const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
         redirect('/login')
