@@ -9,14 +9,35 @@ export default async function DashboardLayout({
     children: React.ReactNode
 }) {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+
+    let user = null
+    try {
+        const authResult = await Promise.race([
+            supabase.auth.getUser(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Auth timeout')), 5000))
+        ]) as { data: { user: any } }
+        user = authResult.data.user
+    } catch (e) {
+        console.error('Dashboard auth check failed:', e)
+    }
 
     if (!user) {
         redirect('/login')
     }
 
     // Check subscription status
-    const { subscription, plan } = await getSubscriptionWithPlan()
+    let subscription = null
+    let plan = null
+    try {
+        const result = await Promise.race([
+            getSubscriptionWithPlan(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Subscription timeout')), 5000))
+        ]) as { subscription: any, plan: any }
+        subscription = result.subscription
+        plan = result.plan
+    } catch (e) {
+        console.error('Subscription check failed:', e)
+    }
 
     // Allow access to pricing pages without subscription
     // The actual path check happens at render time via headers

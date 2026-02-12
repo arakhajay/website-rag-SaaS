@@ -30,9 +30,17 @@ export async function updateSession(request: NextRequest) {
     // IMPORTANT: Avoid writing any logic between createServerClient and
     // supabase.auth.getUser(). A simple mistake can make it very hard to debug
     // issues with users being randomly logged out.
-    const {
-        data: { user },
-    } = await supabase.auth.getUser()
+    let user = null
+    try {
+        const authResult = await Promise.race([
+            supabase.auth.getUser(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Auth timeout')), 5000))
+        ]) as { data: { user: any } }
+        user = authResult.data.user
+    } catch (e) {
+        // Auth timed out or failed — treat as unauthenticated
+        console.error('Middleware auth check failed:', e)
+    }
 
     const pathname = request.nextUrl.pathname
     const isLoginRoute = pathname.startsWith('/login')
