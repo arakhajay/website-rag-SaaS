@@ -82,8 +82,7 @@ export const PLANS: Record<string, PlanConfig> = {
         messagesPerMonth: 10,
         maxChatbots: 1,
         maxTrainingSizeMB: 0.1, // ~100KB or 25 pages
-        productId: '', // Free plan has no product ID
-        yearlyProductId: '',
+
         isTest: true,
     },
     starter: {
