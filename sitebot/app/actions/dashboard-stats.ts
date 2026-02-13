@@ -128,7 +128,7 @@ export async function getDailySessions() {
     const { data: { user } } = await supabase.auth.getUser()
     // Return empty graph if no user
     const days = 7
-    const initialData = []
+    const initialData: { date: string; label: string; sessions: number }[] = []
     for (let i = days - 1; i >= 0; i--) {
         const date = subDays(new Date(), i)
         initialData.push({
