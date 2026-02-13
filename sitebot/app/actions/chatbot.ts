@@ -210,8 +210,9 @@ export async function addTrainingSource(chatbotId: string, type: 'website' | 'te
         .select('*', { count: 'exact', head: true })
         .eq('chatbot_id', chatbotId)
     
-    if ((count || 0) >= plan.maxTrainingSources) {
-         return { success: false, error: `Training source limit reached (${plan.maxTrainingSources}). Upgrade to add more.` }
+    const maxSources = plan.maxTrainingSources ?? 5
+    if ((count || 0) >= maxSources) {
+         return { success: false, error: `Training source limit reached (${maxSources}). Upgrade to add more.` }
     }
 
     let sourceName = ''
