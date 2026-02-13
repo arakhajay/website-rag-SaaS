@@ -4,22 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Check, Sparkles, Zap, Crown, Building2, FlaskConical, Loader2 } from 'lucide-react'
+import { Check, Sparkles, Zap, Crown, Building2, Loader2 } from 'lucide-react'
 import { BillingInterval } from '@/lib/dodo'
 
 const PLANS = [
-    {
-        slug: 'test',
-        name: 'Test Plan',
-        monthlyPrice: '$0.10',
-        yearlyPrice: '$0.08',
-        yearlyTotal: '$1.00',
-        description: 'For development and testing only',
-        icon: FlaskConical,
-        features: ['100 messages/month', '1 chatbot', '5 training sources', 'Basic analytics'],
-        isTest: true,
-        gradient: 'from-slate-500 to-slate-700',
-    },
     {
         slug: 'starter',
         name: 'Starter',
@@ -109,9 +97,6 @@ export default function PricingPage() {
     const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
     const [billingInterval, setBillingInterval] = useState<BillingInterval>('monthly')
     const router = useRouter()
-    const isDev = process.env.NODE_ENV === 'development'
-
-    const visiblePlans = PLANS.filter((p) => isDev || !p.isTest)
     const isYearly = billingInterval === 'yearly'
 
     const handleSelectPlan = async (slug: string) => {
@@ -182,7 +167,7 @@ export default function PricingPage() {
 
             {/* Plans Grid */}
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {visiblePlans.map((plan) => {
+                {PLANS.map((plan) => {
                     const Icon = plan.icon
                     const displayPrice = isYearly ? plan.yearlyPrice : plan.monthlyPrice
                     return (
@@ -204,15 +189,6 @@ export default function PricingPage() {
                                 </div>
                             )}
 
-                            {/* Test Badge */}
-                            {plan.isTest && (
-                                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500 px-3 py-1 text-xs font-semibold text-black shadow-lg">
-                                        <FlaskConical className="h-3 w-3" />
-                                        Dev Only
-                                    </span>
-                                </div>
-                            )}
 
                             <CardHeader className="pb-4 pt-8">
                                 <div className={`mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${plan.gradient} text-white shadow-lg`}>

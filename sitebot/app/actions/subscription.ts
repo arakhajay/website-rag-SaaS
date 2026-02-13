@@ -87,12 +87,37 @@ export async function createCheckoutSession(planSlug: string, billingInterval: B
         let subscription
         try {
             // Try with existing customer ID first
-            subscription = await dodo.subscriptions.create(createSubscriptionPayload(dodoCustomerId || undefined))
+            const payload = createSubscriptionPayload(dodoCustomerId || undefined)
+            console.log('[Subscription] Product ID being used:', productId)
+            console.log('[Subscription] Plan slug:', planSlug, '| Billing:', billingInterval)
+            console.log('[Subscription] Customer ID:', dodoCustomerId || 'none')
+            console.log('[Subscription] Full payload:', JSON.stringify(payload, null, 2))
+            subscription = await dodo.subscriptions.create(payload)
         } catch (firstErr: any) {
-            if (dodoCustomerId && firstErr?.status === 404) {
+            console.error('[Subscription] First attempt failed:', {
+                message: firstErr.message,
+                status: firstErr.status,
+                statusCode: firstErr.statusCode,
+                body: firstErr.body,
+                error: firstErr.error,
+            })
+            if (dodoCustomerId) {
                 // Stale customer ID (e.g. from test mode) — retry without it
-                console.warn('[Subscription] Stale customer_id, retrying without it')
-                subscription = await dodo.subscriptions.create(createSubscriptionPayload())
+                console.warn('[Subscription] Retrying without customer_id (was:', dodoCustomerId, ')')
+                try {
+                    const retryPayload = createSubscriptionPayload()
+                    console.log('[Subscription] Retry payload:', JSON.stringify(retryPayload, null, 2))
+                    subscription = await dodo.subscriptions.create(retryPayload)
+                    // Clear stale customer_id from DB
+                    await adminClient
+                        .from('subscriptions')
+                        .update({ dodo_customer_id: null })
+                        .eq('user_id', user.id)
+                    console.log('[Subscription] Cleared stale customer_id from DB')
+                } catch (retryErr: any) {
+                    console.error('[Subscription] Retry also failed:', retryErr.message)
+                    throw retryErr
+                }
             } else {
                 throw firstErr
             }

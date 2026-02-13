@@ -82,7 +82,8 @@ export async function updateSession(request: NextRequest) {
     }
 
     // If user is already logged in and tries to access login page, redirect to dashboard
-    if (user && isLoginRoute) {
+    // Only redirect distinct GET requests to allow Server Actions (POST) to complete
+    if (user && isLoginRoute && request.method === 'GET') {
         const url = request.nextUrl.clone()
         url.pathname = '/dashboard'
         return NextResponse.redirect(url)
