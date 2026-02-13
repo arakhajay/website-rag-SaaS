@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getDodoClient, PLANS, getPlanBySlug } from '@/lib/dodo'
+import { getDodoClient, PLANS, getPlanBySlug, BillingInterval } from '@/lib/dodo'
 
 export async function getSubscription() {
     const supabase = await createClient()
@@ -30,7 +30,7 @@ export async function getSubscription() {
     return { subscription, error: null }
 }
 
-export async function createCheckoutSession(planSlug: string) {
+export async function createCheckoutSession(planSlug: string, billingInterval: BillingInterval = 'monthly') {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -42,6 +42,8 @@ export async function createCheckoutSession(planSlug: string) {
     if (!plan) {
         return { url: null, error: 'Invalid plan' }
     }
+
+    const productId = billingInterval === 'yearly' ? plan.yearlyProductId : plan.productId
 
     try {
         const dodo = getDodoClient()
@@ -58,34 +60,50 @@ export async function createCheckoutSession(planSlug: string) {
 
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'
 
-        const customerPayload: any = {
-            email: user.email || '',
-            name: user.user_metadata?.full_name || user.email || '',
-        }
-        if (dodoCustomerId) {
-            customerPayload.customer_id = dodoCustomerId
+        const createSubscriptionPayload = (customerId?: string) => {
+            const customerPayload: any = {
+                email: user.email || '',
+                name: user.user_metadata?.full_name || user.email || '',
+            }
+            if (customerId) {
+                customerPayload.customer_id = customerId
+            }
+            return {
+                billing: { country: 'US' as const },
+                customer: customerPayload,
+                product_id: productId,
+                quantity: 1,
+                payment_link: true as const,
+                return_url: `${appUrl}/dashboard/pricing/success?plan=${planSlug}&billing=${billingInterval}`,
+                metadata: {
+                    user_id: user.id,
+                    plan_slug: planSlug,
+                    plan_name: plan.name,
+                    billing_interval: billingInterval,
+                },
+            }
         }
 
-        const subscription = await dodo.subscriptions.create({
-            billing: { country: 'US' },
-            customer: customerPayload,
-            product_id: plan.productId,
-            quantity: 1,
-            payment_link: true,
-            return_url: `${appUrl}/dashboard/pricing/success?plan=${planSlug}`,
-            metadata: {
-                user_id: user.id,
-                plan_slug: planSlug,
-                plan_name: plan.name,
-            },
-        })
+        let subscription
+        try {
+            // Try with existing customer ID first
+            subscription = await dodo.subscriptions.create(createSubscriptionPayload(dodoCustomerId || undefined))
+        } catch (firstErr: any) {
+            if (dodoCustomerId && firstErr?.status === 404) {
+                // Stale customer ID (e.g. from test mode) — retry without it
+                console.warn('[Subscription] Stale customer_id, retrying without it')
+                subscription = await dodo.subscriptions.create(createSubscriptionPayload())
+            } else {
+                throw firstErr
+            }
+        }
 
         // Create a pending subscription record
         const { error: upsertError } = await adminClient
             .from('subscriptions')
             .upsert({
                 user_id: user.id,
-                dodo_product_id: plan.productId,
+                dodo_product_id: productId,
                 plan_name: planSlug,
                 status: 'pending',
                 dodo_customer_id: subscription.customer.customer_id,

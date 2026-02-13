@@ -5,25 +5,27 @@ import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Check, Sparkles, Zap, Crown, Building2, FlaskConical, Loader2 } from 'lucide-react'
+import { BillingInterval } from '@/lib/dodo'
 
 const PLANS = [
     {
         slug: 'test',
         name: 'Test Plan',
-        price: '$0.10',
-        period: '/month',
+        monthlyPrice: '$0.10',
+        yearlyPrice: '$0.08',
+        yearlyTotal: '$1.00',
         description: 'For development and testing only',
         icon: FlaskConical,
         features: ['100 messages/month', '1 chatbot', '5 training sources', 'Basic analytics'],
         isTest: true,
         gradient: 'from-slate-500 to-slate-700',
-        accent: 'slate',
     },
     {
         slug: 'starter',
         name: 'Starter',
-        price: '$15',
-        period: '/month',
+        monthlyPrice: '$15',
+        yearlyPrice: '$12',
+        yearlyTotal: '$144',
         description: 'Perfect for individuals and small merchants',
         icon: Sparkles,
         features: [
@@ -35,13 +37,13 @@ const PLANS = [
             'Basic analytics',
         ],
         gradient: 'from-blue-500 to-cyan-500',
-        accent: 'blue',
     },
     {
         slug: 'growth',
         name: 'Growth',
-        price: '$49',
-        period: '/month',
+        monthlyPrice: '$49',
+        yearlyPrice: '$39',
+        yearlyTotal: '$468',
         description: 'For growing businesses needing more power',
         icon: Zap,
         features: [
@@ -55,13 +57,13 @@ const PLANS = [
         ],
         popular: true,
         gradient: 'from-violet-500 to-purple-600',
-        accent: 'violet',
     },
     {
         slug: 'professional',
         name: 'Professional',
-        price: '$129',
-        period: '/month',
+        monthlyPrice: '$129',
+        yearlyPrice: '$103',
+        yearlyTotal: '$1,236',
         description: 'For power users and small teams',
         icon: Crown,
         features: [
@@ -77,13 +79,13 @@ const PLANS = [
             'Priority support',
         ],
         gradient: 'from-amber-500 to-orange-500',
-        accent: 'amber',
     },
     {
         slug: 'enterprise',
         name: 'Enterprise',
-        price: '$399',
-        period: '/month',
+        monthlyPrice: '$399',
+        yearlyPrice: '$319',
+        yearlyTotal: '$3,828',
         description: 'For large organizations',
         icon: Building2,
         features: [
@@ -100,16 +102,17 @@ const PLANS = [
             'Dedicated account manager',
         ],
         gradient: 'from-emerald-500 to-teal-600',
-        accent: 'emerald',
     },
 ]
 
 export default function PricingPage() {
     const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
+    const [billingInterval, setBillingInterval] = useState<BillingInterval>('monthly')
     const router = useRouter()
     const isDev = process.env.NODE_ENV === 'development'
 
     const visiblePlans = PLANS.filter((p) => isDev || !p.isTest)
+    const isYearly = billingInterval === 'yearly'
 
     const handleSelectPlan = async (slug: string) => {
         setLoadingPlan(slug)
@@ -117,7 +120,7 @@ export default function PricingPage() {
             const res = await fetch('/api/subscription/create-checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ planSlug: slug }),
+                body: JSON.stringify({ planSlug: slug, billingInterval }),
             })
             const data = await res.json()
 
@@ -148,12 +151,40 @@ export default function PricingPage() {
                     Start with a 7-day free trial. No credit card charged until your trial ends.
                     Cancel anytime.
                 </p>
+
+                {/* Billing Toggle */}
+                <div className="flex items-center justify-center gap-3 pt-2">
+                    <span className={`text-sm font-medium transition-colors ${!isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        Monthly
+                    </span>
+                    <button
+                        onClick={() => setBillingInterval(isYearly ? 'monthly' : 'yearly')}
+                        className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+                            isYearly ? 'bg-primary' : 'bg-muted-foreground/30'
+                        }`}
+                    >
+                        <span
+                            className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-300 ${
+                                isYearly ? 'translate-x-8' : 'translate-x-1'
+                            }`}
+                        />
+                    </button>
+                    <span className={`text-sm font-medium transition-colors ${isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        Yearly
+                    </span>
+                    {isYearly && (
+                        <span className="inline-flex items-center rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-semibold text-green-600 dark:text-green-400 ring-1 ring-green-500/20">
+                            Save 20%
+                        </span>
+                    )}
+                </div>
             </div>
 
             {/* Plans Grid */}
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {visiblePlans.map((plan) => {
                     const Icon = plan.icon
+                    const displayPrice = isYearly ? plan.yearlyPrice : plan.monthlyPrice
                     return (
                         <Card
                             key={plan.slug}
@@ -193,9 +224,16 @@ export default function PricingPage() {
 
                             <CardContent className="flex-1 space-y-6">
                                 {/* Price */}
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
-                                    <span className="text-muted-foreground">{plan.period}</span>
+                                <div>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-4xl font-bold tracking-tight">{displayPrice}</span>
+                                        <span className="text-muted-foreground">/mo</span>
+                                    </div>
+                                    {isYearly && (
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            Billed {plan.yearlyTotal}/year
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* Features */}

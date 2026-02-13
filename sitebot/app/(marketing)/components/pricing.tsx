@@ -1,11 +1,17 @@
+'use client'
+
+import { useState } from 'react'
 import Link from "next/link"
 import { Check, Sparkles } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { PLANS, PlanConfig } from "@/lib/dodo"
+import { PLANS, PlanConfig, BillingInterval } from "@/lib/dodo"
 import { cn } from "@/lib/utils"
 
 export function Pricing() {
+    const [billingInterval, setBillingInterval] = useState<BillingInterval>('monthly')
+    const isYearly = billingInterval === 'yearly'
+
     // Select specific plans in order
     const planOrder = ['starter', 'growth', 'professional', 'enterprise']
     const displayPlans = planOrder.map(slug => PLANS[slug]).filter(Boolean) as PlanConfig[]
@@ -19,11 +25,39 @@ export function Pricing() {
                 <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
                     Start with a <strong>7-day free trial</strong>. No commitment, cancel anytime.
                 </p>
+
+                {/* Billing Toggle */}
+                <div className="flex items-center justify-center gap-3 pt-4">
+                    <span className={`text-sm font-medium transition-colors ${!isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        Monthly
+                    </span>
+                    <button
+                        onClick={() => setBillingInterval(isYearly ? 'monthly' : 'yearly')}
+                        className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+                            isYearly ? 'bg-primary' : 'bg-muted-foreground/30'
+                        }`}
+                    >
+                        <span
+                            className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-300 ${
+                                isYearly ? 'translate-x-8' : 'translate-x-1'
+                            }`}
+                        />
+                    </button>
+                    <span className={`text-sm font-medium transition-colors ${isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        Yearly
+                    </span>
+                    {isYearly && (
+                        <span className="inline-flex items-center rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-semibold text-green-600 dark:text-green-400 ring-1 ring-green-500/20">
+                            Save 20%
+                        </span>
+                    )}
+                </div>
             </div>
             
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4 lg:gap-8 pt-12">
                 {displayPlans.map((plan) => {
                     const isPopular = plan.popular
+                    const displayPrice = isYearly ? plan.yearlyPriceDisplay : plan.priceDisplay
                     return (
                         <div 
                             key={plan.slug}
@@ -41,9 +75,14 @@ export function Pricing() {
                             <div className="space-y-2">
                                 <h3 className="font-bold text-2xl">{plan.name}</h3>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-3xl font-bold">{plan.priceDisplay}</span>
+                                    <span className="text-3xl font-bold">{displayPrice}</span>
                                     <span className="text-muted-foreground text-sm">/mo</span>
                                 </div>
+                                {isYearly && (
+                                    <p className="text-xs text-muted-foreground">
+                                        Billed {plan.yearlyTotalDisplay}/year
+                                    </p>
+                                )}
                                 <p className="text-xs text-muted-foreground pt-1 min-h-[40px]">
                                     {plan.slug === 'starter' && "For individuals & new merchants"}
                                     {plan.slug === 'growth' && "For growing businesses"}

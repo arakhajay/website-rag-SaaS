@@ -4,13 +4,13 @@ import { createCheckoutSession } from '@/app/actions/subscription'
 export async function POST(request: Request) {
     try {
         const body = await request.json()
-        const { planSlug } = body
+        const { planSlug, billingInterval } = body
 
         if (!planSlug) {
             return NextResponse.json({ error: 'Plan slug is required' }, { status: 400 })
         }
 
-        const result = await createCheckoutSession(planSlug)
+        const result = await createCheckoutSession(planSlug, billingInterval || 'monthly')
 
         if (result.error) {
             return NextResponse.json({ error: result.error }, { status: 400 })

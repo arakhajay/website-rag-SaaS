@@ -12,16 +12,22 @@ export function getDodoClient(): DodoPayments {
     return dodoClient
 }
 
+export type BillingInterval = 'monthly' | 'yearly'
+
 export interface PlanConfig {
     name: string
     slug: string
     productId: string
-    price: number // in cents
+    yearlyProductId: string
+    price: number // monthly in cents
+    yearlyPrice: number // yearly total in cents
     priceDisplay: string
+    yearlyPriceDisplay: string // per-month equivalent
+    yearlyTotalDisplay: string // full yearly price
     messagesPerMonth: number
     maxChatbots: number
     maxTrainingSources: number
-    maxTrainingSizeMB: number // Limit per source or total? Assuming max size per source for simplicity or total? Let's say max size per file upload.
+    maxTrainingSizeMB: number
     maxTeamMembers: number
     features: string[]
     popular?: boolean
@@ -33,8 +39,12 @@ export const PLANS: Record<string, PlanConfig> = {
         name: 'Free Plan',
         slug: 'free',
         productId: 'free_tier',
+        yearlyProductId: 'free_tier',
         price: 0,
+        yearlyPrice: 0,
         priceDisplay: 'Free',
+        yearlyPriceDisplay: 'Free',
+        yearlyTotalDisplay: 'Free',
         messagesPerMonth: 0,
         maxChatbots: 0,
         maxTrainingSources: 0,
@@ -47,8 +57,12 @@ export const PLANS: Record<string, PlanConfig> = {
         name: 'Test Plan',
         slug: 'test',
         productId: 'pdt_0NYBbibFfeEiVG5kRvo50',
+        yearlyProductId: 'pdt_0NYBbibFfeEiVG5kRvo50', // no yearly for test
         price: 10,
+        yearlyPrice: 100,
         priceDisplay: '$0.10',
+        yearlyPriceDisplay: '$0.08',
+        yearlyTotalDisplay: '$1.00',
         messagesPerMonth: 100,
         maxChatbots: 1,
         maxTrainingSources: 5,
@@ -61,8 +75,12 @@ export const PLANS: Record<string, PlanConfig> = {
         name: 'Starter',
         slug: 'starter',
         productId: 'pdt_0NYBbojOqhoZtNDoF14Mp',
+        yearlyProductId: 'pdt_0NYOcmrQWB3e5IbgKPJDM',
         price: 1500,
+        yearlyPrice: 14400,
         priceDisplay: '$15',
+        yearlyPriceDisplay: '$12',
+        yearlyTotalDisplay: '$144',
         messagesPerMonth: 1000,
         maxChatbots: 1,
         maxTrainingSources: 10,
@@ -82,8 +100,12 @@ export const PLANS: Record<string, PlanConfig> = {
         name: 'Growth',
         slug: 'growth',
         productId: 'pdt_0NYBbomZHGBm8TScglTeg',
+        yearlyProductId: 'pdt_0NYOcmwIh9tdTrwIrmuMv',
         price: 4900,
+        yearlyPrice: 46800,
         priceDisplay: '$49',
+        yearlyPriceDisplay: '$39',
+        yearlyTotalDisplay: '$468',
         messagesPerMonth: 3000,
         maxChatbots: 3,
         maxTrainingSources: 25,
@@ -105,8 +127,12 @@ export const PLANS: Record<string, PlanConfig> = {
         name: 'Professional',
         slug: 'professional',
         productId: 'pdt_0NYBboqhLbjmtfSoUgi6H',
+        yearlyProductId: 'pdt_0NYOcmzgjGY0iNwY1adrI',
         price: 12900,
+        yearlyPrice: 123600,
         priceDisplay: '$129',
+        yearlyPriceDisplay: '$103',
+        yearlyTotalDisplay: '$1,236',
         messagesPerMonth: 12000,
         maxChatbots: 5,
         maxTrainingSources: 50,
@@ -130,8 +156,12 @@ export const PLANS: Record<string, PlanConfig> = {
         name: 'Enterprise',
         slug: 'enterprise',
         productId: 'pdt_0NYBbou1bl5ReyqkYBmlC',
+        yearlyProductId: 'pdt_0NYOcn8aBNfgxKFj5vLyd',
         price: 39900,
+        yearlyPrice: 382800,
         priceDisplay: '$399',
+        yearlyPriceDisplay: '$319',
+        yearlyTotalDisplay: '$3,828',
         messagesPerMonth: 999999,
         maxChatbots: 999,
         maxTrainingSources: 999,
@@ -155,7 +185,7 @@ export const PLANS: Record<string, PlanConfig> = {
 }
 
 export function getPlanByProductId(productId: string): PlanConfig | undefined {
-    return Object.values(PLANS).find((plan) => plan.productId === productId)
+    return Object.values(PLANS).find((plan) => plan.productId === productId || plan.yearlyProductId === productId)
 }
 
 export function getPlanBySlug(slug: string): PlanConfig | undefined {
