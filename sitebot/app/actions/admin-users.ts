@@ -433,6 +433,84 @@ export async function adminGetAllChatbots(
 }
 
 // ============================================
+// DELETE CHATBOT (admin)
+// ============================================
+
+export async function adminDeleteChatbot(
+    chatbotId: string
+): Promise<{ success: boolean; error?: string }> {
+    await verifyAdminOrThrow()
+    const supabase = createAdminClient()
+
+    // Get chatbot info for logging
+    const { data: chatbot } = await supabase
+        .from('chatbots')
+        .select('name, user_id, base_url')
+        .eq('id', chatbotId)
+        .single()
+
+    if (!chatbot) {
+        return { success: false, error: 'Chatbot not found' }
+    }
+
+    // Delete in correct order due to foreign key constraints:
+    // 1. chat_messages (via chat_sessions)
+    const { data: sessions } = await supabase
+        .from('chat_sessions')
+        .select('id')
+        .eq('chatbot_id', chatbotId)
+
+    if (sessions && sessions.length > 0) {
+        const sessionIds = sessions.map(s => s.id)
+        await supabase
+            .from('chat_messages')
+            .delete()
+            .in('session_id', sessionIds)
+    }
+
+    // 2. chat_sessions
+    await supabase
+        .from('chat_sessions')
+        .delete()
+        .eq('chatbot_id', chatbotId)
+
+    // 3. training_sources
+    await supabase
+        .from('training_sources')
+        .delete()
+        .eq('chatbot_id', chatbotId)
+
+    // 4. leads
+    await supabase
+        .from('leads')
+        .delete()
+        .eq('chatbot_id', chatbotId)
+
+    // 5. Delete the chatbot itself
+    const { error } = await supabase
+        .from('chatbots')
+        .delete()
+        .eq('id', chatbotId)
+
+    if (error) {
+        return { success: false, error: error.message }
+    }
+
+    // Log the action
+    const { logAdminAction } = await import('./admin-analytics')
+    await logAdminAction('delete_chatbot', 'chatbot', chatbotId, undefined, {
+        name: chatbot.name,
+        owner_user_id: chatbot.user_id,
+        base_url: chatbot.base_url
+    })
+
+    const { revalidatePath } = await import('next/cache')
+    revalidatePath('/admin/chatbots')
+
+    return { success: true }
+}
+
+// ============================================
 // SYSTEM HEALTH STATS
 // ============================================
 

@@ -27,7 +27,7 @@ export async function getRevenueStats(): Promise<RevenueStats> {
     // Get all subscriptions
     const { data: subscriptions } = await supabase
         .from('subscriptions')
-        .select('plan, status, amount_cents, cancelled_at, started_at')
+        .select('plan_name, status, amount_cents, cancelled_at, started_at')
 
     if (!subscriptions) {
         return {
@@ -51,9 +51,9 @@ export async function getRevenueStats(): Promise<RevenueStats> {
 
     // Plan distribution
     const planDistribution = {
-        free: subscriptions.filter(s => s.plan === 'free').length,
-        pro: subscriptions.filter(s => s.plan === 'pro').length,
-        enterprise: subscriptions.filter(s => s.plan === 'enterprise').length
+        free: subscriptions.filter(s => s.plan_name === 'free').length,
+        pro: subscriptions.filter(s => s.plan_name === 'pro').length,
+        enterprise: subscriptions.filter(s => s.plan_name === 'enterprise').length
     }
 
     // Churn rate (cancelled in last 30 days / total at start of period)

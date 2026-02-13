@@ -16,6 +16,19 @@ export default async function DashboardLayout({
         redirect('/login')
     }
 
+    // Fetch username from profiles
+    let username: string | null = null
+    try {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', user.id)
+            .single()
+        username = profile?.username || user.user_metadata?.username || null
+    } catch {
+        // fallback
+    }
+
     // Check subscription status
     let subscription = null
     let plan = null
@@ -40,6 +53,7 @@ export default async function DashboardLayout({
                 subscriptionPlan={plan?.name || null}
                 subscriptionStatus={subscription?.status || null}
                 isSubscribed={!!isSubscribed}
+                username={username}
             />
             <main className="flex-1 overflow-y-auto">
                 <div className="container mx-auto p-6 md:p-10 max-w-7xl">

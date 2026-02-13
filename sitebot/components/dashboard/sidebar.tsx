@@ -32,9 +32,10 @@ interface SidebarProps {
     subscriptionPlan?: string | null
     subscriptionStatus?: string | null
     isSubscribed?: boolean
+    username?: string | null
 }
 
-export function Sidebar({ subscriptionPlan, subscriptionStatus, isSubscribed }: SidebarProps) {
+export function Sidebar({ subscriptionPlan, subscriptionStatus, isSubscribed, username }: SidebarProps) {
     const pathname = usePathname()
     const router = useRouter()
     const supabase = createClient()
@@ -162,10 +163,10 @@ export function Sidebar({ subscriptionPlan, subscriptionStatus, isSubscribed }: 
             <div className="p-4 border-t bg-muted/20">
                 <div className="flex items-center gap-3 mb-3 px-2">
                     <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-xs">
-                        CN
+                        {(username || 'U').slice(0, 2).toUpperCase()}
                     </div>
                     <div className="flex-1 overflow-hidden">
-                        <p className="text-sm font-medium truncate">Company Name</p>
+                        <p className="text-sm font-medium truncate">{username || 'User'}</p>
                         <div className="flex items-center gap-1.5">
                             <CreditCard className={cn("h-3 w-3", statusColor)} />
                             <p className={cn("text-xs truncate", statusColor)}>

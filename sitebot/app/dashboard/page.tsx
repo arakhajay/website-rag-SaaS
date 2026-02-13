@@ -7,24 +7,31 @@ import { Bot, Link as LinkIcon, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { getChatbots } from '@/app/actions/chatbot'
 import { getMonthlyUsage, getTrainingUsage, getDailySessions } from '@/app/actions/dashboard-stats'
+import { getSubscriptionWithPlan } from '@/app/actions/subscription'
 
 export default async function DashboardPage() {
     // Fetch all data in PARALLEL to eliminate waterfall
-    const [chatbotsResult, usageData, trainingData, sessionsData] = await Promise.all([
+    const [chatbotsResult, usageData, trainingData, sessionsData, subscriptionData] = await Promise.all([
         getChatbots(),
         getMonthlyUsage(),
         getTrainingUsage(),
-        getDailySessions()
+        getDailySessions(),
+        getSubscriptionWithPlan(),
     ])
 
     const { chatbots } = chatbotsResult
+    const { plan } = subscriptionData
 
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
                 <div className="flex items-center space-x-2">
-                    <CreateBotDialog />
+                    <CreateBotDialog
+                        maxChatbots={plan?.maxChatbots ?? 0}
+                        currentChatbotCount={chatbots?.length ?? 0}
+                        planName={plan?.slug ?? null}
+                    />
                 </div>
             </div>
 
@@ -65,7 +72,10 @@ export default async function DashboardPage() {
                         <div className="col-span-full text-center py-12 border-2 border-dashed rounded-lg">
                             <h3 className="text-lg font-semibold">No active chatbots</h3>
                             <p className="text-muted-foreground mb-4">
-                                Create a new chatbot to see it listed here.
+                                {!plan || plan.slug === 'free'
+                                    ? 'Subscribe to a plan to create your first chatbot.'
+                                    : 'Create a new chatbot to see it listed here.'
+                                }
                             </p>
                         </div>
                     )}

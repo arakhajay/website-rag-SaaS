@@ -13,7 +13,7 @@ A professional, RAG-powered AI chatbot platform creating custom assistants train
 
 | Module                       | Status     | Description                                                  |
 | ---------------------------- | ---------- | ------------------------------------------------------------ |
-| 🔐 **Authentication**         | ✅ Complete | Supabase Auth (Email/Password)                               |
+| 🔐 **Authentication**         | ✅ Complete | Supabase Auth (Email/Username/Password)                      |
 | 🤖 **Chatbot CRUD**           | ✅ Complete | Create, rename, delete chatbots                              |
 | 📊 **Leads Management**       | ✅ Complete | Capture leads via widget form, manage status in dashboard    |
 | 🌐 **Website Ingestion**      | ✅ Complete | Crawl sites with Firecrawl + **Deduplication**               |
@@ -33,11 +33,10 @@ A professional, RAG-powered AI chatbot platform creating custom assistants train
 | 📜 **Legal Pages**            | ✅ Complete | Professional Terms of Service & Privacy Policy pages         |
 | 🎨 **Design System**          | ✅ Complete | Premium Dark Mode, Glassmorphism, Inter Typography           |
 
-### 🚧 Pending Modules
-
-| Module      | Status    | Description                              |
-| ----------- | --------- | ---------------------------------------- |
-| 💳 Billing   | 🕐 Pending | Stripe integration                       |
+| 💳 **Billing & Subscriptions** | ✅ Complete | Dodo Payments integration, plan-based limits                 |
+| 👤 **Username Support**        | ✅ Complete | Sign in with email or username                               |
+| 🛡️ **Admin Dashboard**         | ✅ Complete | User/chatbot management, revenue analytics, audit logs       |
+| 🔒 **Subscription Gating**     | ✅ Complete | Plan-based chatbot creation limits with upgrade prompts      |
 
 ## 📈 Analytics Features
 
@@ -71,6 +70,7 @@ A professional, RAG-powered AI chatbot platform creating custom assistants train
 | Database  | Supabase PostgreSQL                 |
 | Vector DB | Pinecone (Serverless)               |
 | AI/LLM    | OpenAI GPT-4o                       |
+| Payments  | Dodo Payments                       |
 | Web Crawl | Firecrawl                           |
 | Widget    | Preact + Vite (60KB bundle)         |
 | UI        | Radix UI, shadcn/ui                 |
@@ -90,8 +90,10 @@ sitebot/
 ├ app/
 │   ├ api/chat/       # RAG chat endpoint (with logging)
 │   ├ api/leads/      # Lead submission endpoint
-│   ├ actions/        # Server actions (ingest, leads, chat-logs, analytics, dashboard-stats)
-│   ├ auth/           # Login, Register
+│   ├ api/webhooks/   # Dodo Payments webhooks
+│   ├ actions/        # Server actions (ingest, leads, chat-logs, analytics, subscription, auth)
+│   ├ admin/          # Admin panel (users, chatbots, analytics, announcements)
+│   ├ auth/           # Login, Register (email/username)
 │   ├ dashboard/      # Main app (Leads, Logs, Training, Analytics, Connect)
 ├ components/         # React components
 │   ├ dashboard/
@@ -117,6 +119,8 @@ OPENAI_API_KEY=
 PINECONE_API_KEY=
 PINECONE_INDEX=
 FIRECRAWL_API_KEY=
+DODO_PAYMENTS_API_KEY=
+DODO_PAYMENTS_WEBHOOK_SECRET=
 \\\
 
 ## 📝 License

@@ -8,11 +8,13 @@ import { createClient } from '@/lib/supabase/client'
 import { Loader2, ShieldCheck } from 'lucide-react'
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { lookupEmailByUsername, saveUsernameToProfile } from '@/app/actions/auth'
 
 function LoginForm() {
     const [loading, setLoading] = useState(false)
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [username, setUsername] = useState('')
     const [isSignUp, setIsSignUp] = useState(false)
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -27,42 +29,72 @@ function LoginForm() {
         setLoading(true)
 
         if (isSignUp) {
-            const { error } = await supabase.auth.signUp({
+            // --- SIGN UP ---
+            if (!username.trim()) {
+                alert('Username is required')
+                setLoading(false)
+                return
+            }
+
+            if (username.trim().length < 3) {
+                alert('Username must be at least 3 characters')
+                setLoading(false)
+                return
+            }
+
+            const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
                     emailRedirectTo: `${window.location.origin}/auth/callback`,
+                    data: {
+                        username: username.trim(),
+                    },
                 },
             })
             if (error) {
                 alert(error.message)
             } else {
-                alert('Check your email for the confirmation link!')
+                // Save username to profiles table
+                if (data.user) {
+                    const result = await saveUsernameToProfile(data.user.id, username.trim(), email)
+                    if (result.error) {
+                        console.error('Username save error:', result.error)
+                    }
+                }
+                alert('Account created! Please sign in with your credentials.')
+                // Switch to sign-in view
+                setIsSignUp(false)
+                setUsername('')
+                setPassword('')
             }
         } else {
+            // --- SIGN IN ---
+            let signInEmail = email.trim()
+
+            // If input doesn't contain @, treat it as a username and look up the email
+            if (!signInEmail.includes('@')) {
+                const result = await lookupEmailByUsername(signInEmail)
+                if (result.error || !result.email) {
+                    alert(result.error || 'No account found with that username')
+                    setLoading(false)
+                    return
+                }
+                signInEmail = result.email
+            }
+
             const { error } = await supabase.auth.signInWithPassword({
-                email,
+                email: signInEmail,
                 password,
             })
             if (error) {
                 alert(error.message)
             } else {
                 // Redirect to the original destination or dashboard
-                router.push(redirectTo || '/dashboard')
+                // Force a hard navigation to ensure cookies are sent to the server
+                window.location.href = redirectTo || '/dashboard'
             }
         }
-        setLoading(false)
-    }
-
-    const handleGoogleLogin = async () => {
-        setLoading(true)
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
-            },
-        })
-        if (error) alert(error.message)
         setLoading(false)
     }
 
@@ -86,12 +118,29 @@ function LoginForm() {
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleAuth} className="space-y-4">
+                    {/* Username field - only shown on Sign Up */}
+                    {isSignUp && (
+                        <div className="space-y-2">
+                            <Label htmlFor="username">Username</Label>
+                            <Input
+                                id="username"
+                                type="text"
+                                placeholder="johndoe"
+                                required
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                            />
+                        </div>
+                    )}
+
                     <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
+                        <Label htmlFor="email">
+                            {isSignUp ? 'Email' : 'Email or Username'}
+                        </Label>
                         <Input
                             id="email"
-                            type="email"
-                            placeholder="m@example.com"
+                            type={isSignUp ? 'email' : 'text'}
+                            placeholder={isSignUp ? 'm@example.com' : 'Email or username'}
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -113,39 +162,19 @@ function LoginForm() {
                     </Button>
                 </form>
 
-                {/* Google login - hidden for admin */}
+                {/* Sign in/up toggle */}
                 {!isAdminLogin && (
-                    <>
-                        <div className="relative my-4">
-                            <div className="absolute inset-0 flex items-center">
-                                <span className="w-full border-t" />
-                            </div>
-                            <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-background px-2 text-muted-foreground">
-                                    Or continue with
-                                </span>
-                            </div>
-                        </div>
-
-                        <Button variant="outline" className="w-full" onClick={handleGoogleLogin} disabled={loading}>
-                            <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
-                                <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
-                            </svg>
-                            Google
-                        </Button>
-
-                        <div className="mt-4 text-center text-sm">
-                            <span className="text-muted-foreground">
-                                {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
-                            </span>
-                            <button
-                                className="font-medium underline"
-                                onClick={() => setIsSignUp(!isSignUp)}
-                            >
-                                {isSignUp ? 'Sign in' : 'Sign up'}
-                            </button>
-                        </div>
-                    </>
+                    <div className="mt-4 text-center text-sm">
+                        <span className="text-muted-foreground">
+                            {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
+                        </span>
+                        <button
+                            className="font-medium underline"
+                            onClick={() => setIsSignUp(!isSignUp)}
+                        >
+                            {isSignUp ? 'Sign in' : 'Sign up'}
+                        </button>
+                    </div>
                 )}
             </CardContent>
         </Card>

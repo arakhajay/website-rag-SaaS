@@ -14,16 +14,27 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, Plus } from 'lucide-react'
+import { Loader2, Plus, Crown } from 'lucide-react'
 import { createChatbot } from '@/app/actions/chatbot'
+import Link from 'next/link'
 
-export function CreateBotDialog() {
+interface CreateBotDialogProps {
+    maxChatbots?: number
+    currentChatbotCount?: number
+    planName?: string | null
+}
+
+export function CreateBotDialog({ maxChatbots = 0, currentChatbotCount = 0, planName }: CreateBotDialogProps) {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [url, setUrl] = useState('')
     const [name, setName] = useState('')
     const [error, setError] = useState('')
     const router = useRouter()
+
+    const hasNoPlan = !planName || planName === 'free'
+    const atLimit = !hasNoPlan && currentChatbotCount >= maxChatbots
+    const remaining = maxChatbots - currentChatbotCount
 
     const handleCreate = async () => {
         if (!name.trim() || !url.trim()) {
@@ -54,18 +65,56 @@ export function CreateBotDialog() {
         }
     }
 
+    // No active subscription — show upgrade button
+    if (hasNoPlan) {
+        return (
+            <Link href="/dashboard/pricing">
+                <Button variant="default">
+                    <Crown className="mr-2 h-4 w-4" /> Upgrade to Create Chatbot
+                </Button>
+            </Link>
+        )
+    }
+
+    // At plan chatbot limit — show disabled state
+    if (atLimit) {
+        return (
+            <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                    {currentChatbotCount}/{maxChatbots} chatbots used
+                </span>
+                <Link href="/dashboard/pricing">
+                    <Button variant="outline" size="sm">
+                        <Crown className="mr-2 h-4 w-4" /> Upgrade
+                    </Button>
+                </Link>
+            </div>
+        )
+    }
+
+    // Under limit — normal create flow with remaining count
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button>
-                    <Plus className="mr-2 h-4 w-4" /> Create Chatbot
-                </Button>
+                <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                        {currentChatbotCount}/{maxChatbots} chatbots
+                    </span>
+                    <Button>
+                        <Plus className="mr-2 h-4 w-4" /> Create Chatbot
+                    </Button>
+                </div>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>Create New Chatbot</DialogTitle>
                     <DialogDescription>
                         Enter a name and the website URL for your chatbot.
+                        {remaining > 0 && (
+                            <span className="block mt-1 text-xs">
+                                You can create {remaining} more chatbot{remaining !== 1 ? 's' : ''} on your {planName} plan.
+                            </span>
+                        )}
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">

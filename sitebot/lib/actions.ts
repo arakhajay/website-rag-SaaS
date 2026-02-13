@@ -23,7 +23,11 @@ export async function createChatbot(formData: FormData): Promise<ActionState> {
     const { data: profile } = await supabase.from('profiles').select('id, plan').eq('id', user.id).single()
     if (!profile) {
         // Create profile if missing (fallback, though trigger handles it)
-        await supabase.from('profiles').insert({ id: user.id, email: user.email })
+        await supabase.from('profiles').insert({
+            id: user.id,
+            email: user.email,
+            username: user.user_metadata?.username || null,
+        })
     }
 
     const name = formData.get('name') as string

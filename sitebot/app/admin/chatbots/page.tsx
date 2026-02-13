@@ -12,6 +12,7 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { Bot, Search, MessageSquare, FileText, Link as LinkIcon } from 'lucide-react'
+import { DeleteChatbotButton } from '@/components/admin/delete-chatbot-button'
 import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
 
@@ -107,12 +108,13 @@ export default async function AdminChatbotsPage({ searchParams }: PageProps) {
                             <TableHead>Sources</TableHead>
                             <TableHead>Messages</TableHead>
                             <TableHead>Created</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {chatbots.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                                     No chatbots found
                                 </TableCell>
                             </TableRow>
@@ -146,6 +148,12 @@ export default async function AdminChatbotsPage({ searchParams }: PageProps) {
                                     </TableCell>
                                     <TableCell className="text-muted-foreground">
                                         {formatDistanceToNow(new Date(chatbot.created_at), { addSuffix: true })}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <DeleteChatbotButton
+                                            chatbotId={chatbot.id}
+                                            chatbotName={chatbot.name}
+                                        />
                                     </TableCell>
                                 </TableRow>
                             ))
