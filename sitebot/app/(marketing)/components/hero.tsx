@@ -14,12 +14,12 @@ export function Hero() {
                     Train a custom AI chatbot on your website, PDFs, and documents in 2 minutes. Capture leads, resolve support tickets, and automate workflows—24/7.
                 </p>
                 <div className="space-x-4">
-                    <Link href="/signup">
+                    <Link href="/login">
                         <Button size="lg" className="h-12 px-8 text-lg bg-indigo-600 hover:bg-indigo-700">Build Your AI Agent for Free</Button>
                     </Link>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                    Join thousands of founders saving time and money. No credit card required.
+                    Join thousands of founders saving time and money. Try 7 days trial, cancel at any time.
                 </p>
 
                 {/* Hero Visual */}

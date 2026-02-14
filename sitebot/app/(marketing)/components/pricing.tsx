@@ -101,7 +101,7 @@ export function Pricing() {
                             </ul>
 
                             <div className="mt-auto pt-4">
-                                <Link href={plan.slug === 'enterprise' ? "/contact" : "/signup"}>
+                                <Link href={plan.slug === 'enterprise' ? "/contact" : "/login"}>
                                     <Button 
                                         className="w-full" 
                                         variant={isPopular ? "default" : "outline"}

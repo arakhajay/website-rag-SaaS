@@ -89,8 +89,31 @@ export function Features() {
                         </div>
                     </div>
                 </div>
-                <div className="lg:order-1 rounded-xl border bg-muted/50 p-8 flex items-center justify-center aspect-square md:aspect-auto">
-                    <Zap className="h-32 w-32 text-primary/20" />
+                <div className="lg:order-1 rounded-xl border bg-muted/50 p-8 shadow-sm">
+                    {/* HR workflow placeholder */}
+                    <div className="space-y-4">
+                        <div className="flex gap-4 flex-row-reverse">
+                            <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center">U</div>
+                            <div className="bg-primary text-primary-foreground rounded-lg p-3 text-sm shadow-sm max-w-[80%]">
+                                How to file expenses?
+                            </div>
+                        </div>
+                        <div className="flex gap-4">
+                            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center"><Bot size={20} /></div>
+                            <div className="bg-background border rounded-lg p-3 text-sm shadow-sm max-w-[80%] space-y-2">
+                                <p>You can file expenses by submitting the form in our portal. Here is the policy PDF for reference.</p>
+                                <div className="flex items-center gap-2 p-2 bg-muted rounded border text-xs font-medium">
+                                    <div className="h-8 w-8 bg-red-100 text-red-600 rounded flex items-center justify-center">
+                                        PDF
+                                    </div>
+                                    <div>
+                                        Expense_Policy_2024.pdf
+                                        <div className="text-[10px] text-muted-foreground">1.2 MB</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

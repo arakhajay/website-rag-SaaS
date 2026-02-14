@@ -52,7 +52,7 @@ export function Navbar() {
                                 Sign In
                             </Button>
                         </Link>
-                        <Link href="/signup">
+                        <Link href="/login">
                             <Button size="sm">
                                 Get Started
                             </Button>

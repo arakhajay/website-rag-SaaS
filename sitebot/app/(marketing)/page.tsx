@@ -24,12 +24,12 @@ export default function LandingPage() {
                     <p className="text-muted-foreground text-xl">
                         Join thousands of founders saving time and money with Zivox Agent.
                     </p>
-                    <Link href="/signup">
+                    <Link href="/login">
                         <Button size="lg" className="h-12 px-8 text-lg bg-indigo-600 hover:bg-indigo-700">
                             Build Your AI Agent for Free
                         </Button>
                     </Link>
-                    <p className="text-sm text-muted-foreground">No credit card required.</p>
+                    <p className="text-sm text-muted-foreground">Try 7 days trial, cancel at any time.</p>
                 </div>
             </section>
         </div>
