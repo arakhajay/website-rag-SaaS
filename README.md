@@ -33,7 +33,7 @@ A professional, RAG-powered AI chatbot platform creating custom assistants train
 | 📜 **Legal Pages**            | ✅ Complete | Professional Terms of Service & Privacy Policy pages         |
 | 🎨 **Design System**          | ✅ Complete | Premium Dark Mode, Glassmorphism, Inter Typography           |
 
-| 💳 **Billing & Subscriptions** | ✅ Complete | Dodo Payments integration, plan-based limits                 |
+| 💳 **Billing & Subscriptions** | ✅ Complete | Dodo Payments, plan upgrades, cancellations & limits       |
 | 👤 **Username Support**        | ✅ Complete | Sign in with email or username                               |
 | 🛡️ **Admin Dashboard**         | ✅ Complete | User/chatbot management, revenue analytics, audit logs       |
 | 🔒 **Subscription Gating**     | ✅ Complete | Plan-based chatbot creation limits with upgrade prompts      |

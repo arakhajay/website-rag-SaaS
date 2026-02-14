@@ -151,7 +151,7 @@ export async function createCheckoutSession(planSlug: string, billingInterval: B
     }
 }
 
-export async function cancelSubscription() {
+export async function cancelSubscription(feedback?: string) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -165,23 +165,76 @@ export async function cancelSubscription() {
         .from('subscriptions')
         .select('*')
         .eq('user_id', user.id)
-        .in('status', ['active', 'on_hold'])
+        .in('status', ['active', 'on_hold', 'pending'])
         .single()
 
     if (!subscription) {
         return { success: false, error: 'No active subscription found' }
     }
 
-    // Update local status
-    await adminClient
-        .from('subscriptions')
-        .update({
+    try {
+        // 1. Save feedback if provided
+        if (feedback) {
+            await adminClient
+                .from('feedback')
+                .insert({
+                    user_id: user.id,
+                    category: 'cancellation',
+                    message: feedback,
+                })
+        }
+
+        const now = new Date()
+        const trialEndsAt = subscription.trial_ends_at ? new Date(subscription.trial_ends_at) : null
+        const isTrialing = (trialEndsAt && trialEndsAt > now) || subscription.status === 'pending'
+
+        // 2. Cancel in Dodo Payments (only if we have an ID)
+        if (subscription.dodo_subscription_id) {
+            const dodo = getDodoClient()
+            try {
+                if (isTrialing) {
+                     await dodo.subscriptions.update(subscription.dodo_subscription_id, {
+                        status: 'cancelled'
+                    })
+                } else {
+                    await dodo.subscriptions.update(subscription.dodo_subscription_id, {
+                        cancel_at_next_billing_date: true
+                    })
+                }
+            } catch (dodoError: any) {
+                console.error('[Subscription] Dodo cancel error:', dodoError)
+                // Continue to local cancel even if Dodo fails (e.g. if ID is invalid)
+            }
+        }
+
+        // 3. Update local status
+        const updatePayload: any = {
             status: 'cancelled',
             updated_at: new Date().toISOString(),
-        })
-        .eq('id', subscription.id)
+            // cancel_at_period_end: true // Column missing in DB, commenting out for now
+        }
 
-    return { success: true }
+        if (isTrialing) {
+            updatePayload.trial_ends_at = new Date().toISOString() // Expire trial immediately
+            updatePayload.current_period_end = new Date().toISOString() // Expire access
+        }
+
+        const { data: updatedSub, error: updateError } = await adminClient
+            .from('subscriptions')
+            .update(updatePayload)
+            .eq('id', subscription.id)
+            .select('*')
+            .single()
+
+        if (updateError) {
+             throw new Error(updateError.message)
+        }
+
+        return { success: true, subscription: updatedSub }
+    } catch (error: any) {
+        console.error('[Subscription] Cancel error:', error)
+        return { success: false, error: error.message || 'Failed to cancel subscription' }
+    }
 }
 
 export async function getSubscriptionWithPlan() {
