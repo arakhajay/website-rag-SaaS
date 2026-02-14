@@ -78,9 +78,9 @@ export async function createCheckoutSession(planSlug: string, billingInterval: B
                 metadata: {
                     user_id: user.id,
                     plan_slug: planSlug,
-                    plan_name: plan.name,
                     billing_interval: billingInterval,
                 },
+                trial_period_days: 7,
             }
         }
 

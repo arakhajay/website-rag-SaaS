@@ -54,7 +54,7 @@ A full-stack SaaS platform for creating AI chatbots trained on your own data. Bu
 - [ ] Custom styling/theming options
 
 #### 💳 Billing & Multi-tenancy
-- [ ] Stripe integration for subscriptions
+- [x] Dodo Payments integration for subscriptions (with 7-day trial)
 - [ ] Usage-based pricing
 - [ ] Role-based access control
 - [ ] Team/Organization features
