@@ -43,5 +43,10 @@ jobs:
             git reset --hard origin/main
 
             cd deploy
-            docker compose up -d --build
+            if [ -f docker-compose.nodomain.yml ]; then
+              echo "Using nodomain override (docker-compose.nodomain.yml)"
+              docker compose -f docker-compose.yml -f docker-compose.nodomain.yml up -d --build
+            else
+              docker compose up -d --build
+            fi
             docker image prune -f

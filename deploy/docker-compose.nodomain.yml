@@ -1,0 +1,11 @@
+# No-domain deployment override
+# Exposes the Next.js app directly on a high port so you can test with http://<VPS_IP>:3002
+
+services:
+  sitebot:
+    ports:
+      - "3002:3000"
+
+  # Disable Caddy until you have a domain (avoids binding 80/443)
+  caddy:
+    profiles: ["disabled"]
