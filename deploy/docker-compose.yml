@@ -1,0 +1,32 @@
+services:
+  sitebot:
+    build:
+      context: ../sitebot
+      dockerfile: Dockerfile
+    container_name: sitebot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Next.js listens on 3000 inside container
+      - PORT=3000
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - sitebot
+
+volumes:
+  caddy_data:
+  caddy_config:

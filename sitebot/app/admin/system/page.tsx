@@ -1,5 +1,7 @@
 import { getSystemHealth } from '@/app/actions/admin-users'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
+export const dynamic = 'force-dynamic'
 import { Badge } from '@/components/ui/badge'
 import {
     Activity,

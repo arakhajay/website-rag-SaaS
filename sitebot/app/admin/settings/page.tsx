@@ -1,5 +1,7 @@
 import { getFeatureFlags } from '@/app/actions/admin-controls'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+
+export const dynamic = 'force-dynamic'
 import { Badge } from '@/components/ui/badge'
 import { Flag, Settings2, Zap, Lock, Palette, Code, Bot } from 'lucide-react'
 import { FeatureFlagsManager } from '@/components/admin/feature-flags-manager'

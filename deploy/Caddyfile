@@ -1,0 +1,10 @@
+{
+  email you@example.com
+}
+
+# Replace with your real domain
+your-domain.com {
+  encode zstd gzip
+
+  reverse_proxy sitebot:3000
+}
