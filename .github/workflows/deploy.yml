@@ -21,12 +21,15 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            # Navigate to the project directory or clone it if it doesn't exist
+            # Navigate to the project directory or clone it with an authenticated URL
             if [ ! -d "~/website-rag-SaaS" ]; then
-              git clone https://github.com/arakhajay/website-rag-SaaS.git ~/website-rag-SaaS
+              git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git ~/website-rag-SaaS
             fi
             
             cd ~/website-rag-SaaS
+            
+            # Update the remote URL in case the token changed
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
             
             # Fetch the latest changes and reset hard to match main branch strictly
             git fetch origin main
