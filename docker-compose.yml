@@ -36,6 +36,6 @@ services:
       - "443:443"
     environment:
       - DOMAIN=zivoxagent.com
-    command: caddy reverse-proxy --from https://${DOMAIN:-zivoxagent.com} --to http://sitebot:3000
+    command: caddy reverse-proxy --from https://${DOMAIN:-zivoxagent.com},https://www.${DOMAIN:-zivoxagent.com} --to http://sitebot:3000
     depends_on:
       - sitebot
