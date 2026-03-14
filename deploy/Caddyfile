@@ -1,10 +1,12 @@
 {
-  email you@example.com
+  email admin@zivoxagent.com
 }
 
-# Replace with your real domain
-your-domain.com {
+zivoxagent.com {
   encode zstd gzip
-
   reverse_proxy sitebot:3000
+}
+
+www.zivoxagent.com {
+  redir https://zivoxagent.com{uri} permanent
 }
