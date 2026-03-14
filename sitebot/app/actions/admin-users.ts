@@ -102,7 +102,25 @@ export async function getRecentSignups(limit: number = 5): Promise<RecentSignup[
         return []
     }
 
-    return data || []
+    // Fetch active subscriptions for these users
+    const userIds = data?.map(u => u.id) || []
+    const { data: subs } = await supabase
+        .from('subscriptions')
+        .select('user_id, plan_name')
+        .in('user_id', userIds)
+        .in('status', ['active', 'pending', 'trialing', 'on_hold'])
+
+    const subMap = (subs || []).reduce((acc, sub) => {
+        acc[sub.user_id] = sub.plan_name
+        return acc
+    }, {} as Record<string, string>)
+
+    const enrichedData = (data || []).map(u => ({
+        ...u,
+        billing_status: subMap[u.id] || u.billing_status || 'free'
+    }))
+
+    return enrichedData
 }
 
 // ============================================
@@ -162,8 +180,21 @@ export async function adminGetAllUsers(
         countMap[c.user_id] = (countMap[c.user_id] || 0) + 1
     })
 
+    // Fetch active subscriptions
+    const { data: subs } = await supabase
+        .from('subscriptions')
+        .select('user_id, plan_name')
+        .in('user_id', userIds)
+        .in('status', ['active', 'pending', 'trialing', 'on_hold'])
+        
+    const subMap = (subs || []).reduce((acc, sub) => {
+        acc[sub.user_id] = sub.plan_name
+        return acc
+    }, {} as Record<string, string>)
+
     const usersWithCounts: AdminUser[] = (users || []).map(u => ({
         ...u,
+        billing_status: subMap[u.id] || u.billing_status || 'free',
         message_credits: u.message_credits || 10000,
         training_char_limit: u.training_char_limit || 400000,
         status: u.status || 'active',
@@ -322,6 +353,16 @@ export async function adminChangeUserPlan(
     if (error) {
         return { success: false, error: error.message }
     }
+
+    // Upsert into subscriptions table so it shows up globally
+    await supabase
+        .from('subscriptions')
+        .upsert({
+            user_id: userId,
+            plan_name: plan,
+            status: 'active',
+            updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' })
 
     // Log the action
     const { userId: adminId } = await verifyAdminOrThrow()

@@ -30,11 +30,10 @@ A full-stack SaaS platform for creating AI chatbots trained on your own data. Bu
 | **CSV/SQL** | ✅ Working | Upload CSV for structured data queries |
 | **PDF** | ✅ Working | Parse PDF documents (v1 library) |
 
-#### 💬 Chat Interface
-- [x] Real-time streaming responses
-- [x] Markdown rendering (tables, lists, code)
-- [x] Beautiful formatted output
-- [x] Error handling with user feedback
+#### 💬 Chat Interface & Integrations
+- [x] **Omnichannel Presence**: Deploy bots across WhatsApp, Slack, Telegram, and Discord.
+- [x] **Platform-specific Previews**: Interaction simulators for each platform (WhatsApp-styled bubbles, Slack dark mode, etc.).
+- [x] **Hub Explorer**: Dedicated integrations hub with detailed use cases and benefits.
 
 #### 🔍 Hybrid RAG Retrieval
 - [x] **Vector Search**: Pinecone-based semantic search
@@ -55,6 +54,7 @@ A full-stack SaaS platform for creating AI chatbots trained on your own data. Bu
 
 #### 💳 Billing & Multi-tenancy
 - [x] Dodo Payments integration for subscriptions (with 7-day trial)
+- [x] **Plan-based Limits**: Control message volume and chatbot counts via subscription tier.
 - [ ] Usage-based pricing
 - [ ] Role-based access control
 - [ ] Team/Organization features

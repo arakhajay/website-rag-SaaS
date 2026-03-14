@@ -26,6 +26,15 @@ export function Navbar() {
                             Features
                         </Link>
                         <Link
+                            href="/integrations"
+                            className={cn(
+                                "flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary",
+                                pathname === "/integrations" && "text-foreground"
+                            )}
+                        >
+                            Integrations
+                        </Link>
+                        <Link
                             href="#pricing"
                             className={cn(
                                 "flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary",

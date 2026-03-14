@@ -33,6 +33,13 @@ export interface PlanConfig {
     maxTrainingSizeMB: number
     maxTeamMembers?: number
     features: string[]
+    allowedIntegrations: string[] // List of allowed integration slugs
+    featuresEnabled: {
+        crmSync: 'none' | 'batch' | 'realtime'
+        agenticActions: boolean // Can edit orders/refunds
+        whiteLabel: boolean
+        byok: boolean
+    }
     limits?: {
         messagesPerMonth: number
         maxChatbots: number
@@ -59,6 +66,13 @@ export const PLANS: Record<string, PlanConfig> = {
         maxTrainingSizeMB: 0,
         maxTeamMembers: 1,
         features: ['Upgrade to create chatbots'],
+        allowedIntegrations: [],
+        featuresEnabled: {
+            crmSync: 'none',
+            agenticActions: false,
+            whiteLabel: false,
+            byok: false,
+        },
         isTest: false,
     },
     test: {
@@ -82,7 +96,13 @@ export const PLANS: Record<string, PlanConfig> = {
         messagesPerMonth: 10,
         maxChatbots: 1,
         maxTrainingSizeMB: 0.1, // ~100KB or 25 pages
-
+        allowedIntegrations: ['web'],
+        featuresEnabled: {
+            crmSync: 'none',
+            agenticActions: false,
+            whiteLabel: false,
+            byok: false,
+        },
         isTest: true,
     },
     starter: {
@@ -103,10 +123,17 @@ export const PLANS: Record<string, PlanConfig> = {
         features: [
             '2,000 messages/month',
             '2 chatbots',
-            '10MB training limit (~2.5k pages)',
+            '10MB training limit',
+            'Web, Telegram & Discord',
             'Remove 7ivox branding',
-            'Priority support',
         ],
+        allowedIntegrations: ['web', 'telegram', 'discord'],
+        featuresEnabled: {
+            crmSync: 'none',
+            agenticActions: false,
+            whiteLabel: false,
+            byok: false,
+        },
     },
     growth: {
         name: 'Growth',
@@ -126,10 +153,17 @@ export const PLANS: Record<string, PlanConfig> = {
         features: [
             '5,000 messages/month',
             '5 chatbots',
-            '25MB training limit (~6k pages)',
+            'All Integrations + WhatsApp (SV)',
+            'Batch CRM Sync (6hr)',
             'Advanced analytics',
-            'API access',
         ],
+        allowedIntegrations: ['web', 'telegram', 'discord', 'whatsapp', 'slack', 'shopify', 'wordpress', 'zapier'],
+        featuresEnabled: {
+            crmSync: 'batch',
+            agenticActions: false,
+            whiteLabel: false,
+            byok: false,
+        },
         popular: true,
     },
     professional: {
@@ -150,10 +184,17 @@ export const PLANS: Record<string, PlanConfig> = {
         features: [
             '15,000 messages/month',
             '10 chatbots',
-            '75MB training limit (~18k pages)',
-            'Team collaboration',
-            'Custom integrations',
+            'WhatsApp (Full HSM)',
+            'Real-time CRM Sync',
+            'Agentic RAG (Edit Orders)',
         ],
+        allowedIntegrations: ['web', 'telegram', 'discord', 'whatsapp', 'slack', 'shopify', 'wordpress', 'zapier', 'hubspot'],
+        featuresEnabled: {
+            crmSync: 'realtime',
+            agenticActions: true,
+            whiteLabel: false,
+            byok: false,
+        },
     },
     enterprise: {
         name: 'Enterprise',
@@ -173,10 +214,17 @@ export const PLANS: Record<string, PlanConfig> = {
         features: [
             'Unlimited messages',
             'Unlimited chatbots',
-            'Unlimited training',
+            'Full White-labeling',
             'Dedicated success manager',
-            'SLA & Uptime guarantees',
+            'BYOK Mode (OpenAI/Anthropic)',
         ],
+        allowedIntegrations: ['web', 'telegram', 'discord', 'whatsapp', 'slack', 'shopify', 'wordpress', 'zapier', 'hubspot'],
+        featuresEnabled: {
+            crmSync: 'realtime',
+            agenticActions: true,
+            whiteLabel: true,
+            byok: true,
+        },
     },
 }
 

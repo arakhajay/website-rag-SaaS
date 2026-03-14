@@ -3,6 +3,7 @@ import { SocialProof } from "./components/social-proof"
 import { Features } from "./components/features"
 import { Pricing } from "./components/pricing"
 import { FAQ } from "./components/faq"
+import { Integrations } from "./components/integrations"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
@@ -12,6 +13,7 @@ export default function LandingPage() {
             <Hero />
             <SocialProof />
             <Features />
+            <Integrations />
             <Pricing />
             <FAQ />
 
