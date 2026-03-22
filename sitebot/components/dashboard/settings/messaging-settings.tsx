@@ -7,6 +7,68 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { type ChatbotSettings } from "@/app/actions/settings"
+import { Sparkles } from "lucide-react"
+
+const CHAT_MODELS = [
+    {
+        id: 'gemini-2.0-flash',
+        label: 'Gemini 2.0 Flash',
+        provider: 'google',
+        description: 'Fast & ultra-cheap',
+        costTier: 'low' as const,
+    },
+    {
+        id: 'gemini-2.5-flash',
+        label: 'Gemini 2.5 Flash',
+        provider: 'google',
+        description: 'Latest — smart & cheap',
+        costTier: 'low' as const,
+    },
+    {
+        id: 'gpt-4o-mini',
+        label: 'GPT-4o Mini',
+        provider: 'openai',
+        description: 'Affordable OpenAI',
+        costTier: 'medium' as const,
+    },
+    {
+        id: 'gpt-4.1-mini',
+        label: 'GPT-4.1 Mini',
+        provider: 'openai',
+        description: 'Latest compact OpenAI',
+        costTier: 'medium' as const,
+    },
+    {
+        id: 'gpt-4o',
+        label: 'GPT-4o',
+        provider: 'openai',
+        description: 'Most capable',
+        costTier: 'high' as const,
+    },
+]
+
+
+
+function CostBadge({ tier }: { tier: 'low' | 'medium' | 'high' }) {
+    const config = {
+        low: { label: '$', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' },
+        medium: { label: '$$', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
+        high: { label: '$$$', color: 'bg-red-500/20 text-red-400 border-red-500/30' },
+    }
+    const c = config[tier]
+    return (
+        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${c.color}`}>
+            {c.label}
+        </span>
+    )
+}
+
+function ProviderBadge({ provider }: { provider: string }) {
+    if (provider === 'google') {
+        return <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400 border border-blue-500/30">Gemini</span>
+    }
+    return <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-green-500/15 text-green-400 border border-green-500/30">OpenAI</span>
+}
 
 interface MessagingSettingsProps {
     settings: ChatbotSettings
@@ -27,6 +89,8 @@ export function MessagingSettings({ settings, onSave }: MessagingSettingsProps) 
         })
     }
 
+    const selectedModel = CHAT_MODELS.find(m => m.id === (messaging.model || 'gemini-2.0-flash'))
+
     return (
         <div className="space-y-8">
             <div>
@@ -34,21 +98,40 @@ export function MessagingSettings({ settings, onSave }: MessagingSettingsProps) 
             </div>
 
             <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                        <Label>AI Model</Label>
-                        <p className="text-xs text-muted-foreground">Select a model to power your bot</p>
+                {/* AI Chat Model */}
+                <div className="space-y-3 p-4 rounded-xl border bg-card/50">
+                    <div className="flex items-center gap-2 mb-1">
+                        <Sparkles className="h-4 w-4 text-purple-400" />
+                        <Label className="text-sm font-semibold">AI Chat Model</Label>
                     </div>
-                    <Select value={messaging.model || 'gpt-4o-mini'} onValueChange={(val) => handleChange('model', val)}>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Select model" />
+                    <p className="text-xs text-muted-foreground -mt-1">Select which AI model powers your chatbot responses</p>
+                    <Select value={messaging.model || 'gemini-2.0-flash'} onValueChange={(val) => handleChange('model', val)}>
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select model">
+                                {selectedModel && (
+                                    <div className="flex items-center gap-2">
+                                        <span>{selectedModel.label}</span>
+                                        <CostBadge tier={selectedModel.costTier} />
+                                    </div>
+                                )}
+                            </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="gpt-4o-mini">gpt-4o-mini</SelectItem>
-                            <SelectItem value="gpt-4o">gpt-4o</SelectItem>
+                            {CHAT_MODELS.map((model) => (
+                                <SelectItem key={model.id} value={model.id}>
+                                    <div className="flex items-center gap-2 w-full">
+                                        <span className="font-medium">{model.label}</span>
+                                        <ProviderBadge provider={model.provider} />
+                                        <CostBadge tier={model.costTier} />
+                                        <span className="text-xs text-muted-foreground ml-auto">{model.description}</span>
+                                    </div>
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>
+
+
 
                 <div className="flex items-center justify-between">
                     <div className="space-y-0.5">

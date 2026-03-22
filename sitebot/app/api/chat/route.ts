@@ -1,11 +1,9 @@
-import { openai } from '@ai-sdk/openai'
 import { streamText } from 'ai'
-import { Pinecone } from '@pinecone-database/pinecone'
-import { OpenAIEmbeddings } from '@langchain/openai'
 import { generateAndRunSQL } from '@/lib/sql-agent'
 import { logInfo, logError } from '@/lib/logger'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PLANS } from '@/lib/dodo'
+import { getChatModel, getEmbeddingsModel } from '@/lib/ai-models'
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30
@@ -155,28 +153,39 @@ export async function POST(req: Request) {
                 })
         }
 
+        // --- Fetch Chatbot Settings for Model Preferences ---
+        const { data: botSettings } = await adminClient
+            .from('chatbot_settings')
+            .select('messaging')
+            .eq('chatbot_id', chatbotId)
+            .maybeSingle()
+
+        const selectedChatModel = (botSettings?.messaging as any)?.model || 'gemini-2.0-flash'
+        console.log(`[ChatRoute] Using chat model: ${selectedChatModel}`)
+
         // --- Parallel Execution: Vector Search + SQL Search ---
 
-        // 1. Vector Search
+        // 1. Vector Search (Supabase pgvector)
         const vectorPromise = (async () => {
             try {
                 console.log('[Chat] Starting Vector Search:', userQuery)
-                const embeddings = new OpenAIEmbeddings({
-                    model: 'text-embedding-3-small',
-                })
+                const embeddings = getEmbeddingsModel('text-embedding-3-small')
                 const vector = await embeddings.embedQuery(userQuery)
-                const pinecone = new Pinecone()
-                const index = pinecone.index(process.env.PINECONE_INDEX!)
 
-                const results = await index.query({
-                    vector,
-                    topK: 3,
-                    includeMetadata: true,
-                    filter: { chatbotId },
+                const { data: results, error } = await adminClient.rpc('match_documents', {
+                    query_embedding: JSON.stringify(vector),
+                    match_chatbot_id: chatbotId,
+                    match_count: 3,
+                    match_threshold: 0.5
                 })
-                console.log('[Chat] Vector results found:', results.matches?.length || 0)
-                // Fix: ingest.ts stores in 'content', verify fallback to 'text'
-                return results.matches?.map(match => match.metadata?.content || match.metadata?.text || '').join('\n\n') || ''
+
+                if (error) {
+                    console.error('[Chat] Vector search RPC error:', error)
+                    return ''
+                }
+
+                console.log('[Chat] Vector results found:', results?.length || 0)
+                return results?.map((r: any) => r.content).join('\n\n') || ''
             } catch (e) {
                 console.error('[Chat] Vector search error:', e)
                 return ''
@@ -287,7 +296,7 @@ ${workflowsText}
         const dbSessionId = await loggingPromise
 
         const result = await streamText({
-            model: openai('gpt-4o'),
+            model: getChatModel(selectedChatModel),
             system: systemPrompt,
             messages,
             onFinish: async ({ text }) => {

@@ -29,18 +29,21 @@ export default async function DashboardLayout({
         // fallback
     }
 
-    // Check subscription status
+    // Check subscription status with timeout protection
     let subscription = null
     let plan = null
     try {
+        const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Subscription timeout')), 5000)
+        )
         const result = await Promise.race([
             getSubscriptionWithPlan(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Subscription timeout')), 5000))
-        ]) as { subscription: any, plan: any }
-        subscription = result.subscription
-        plan = result.plan
+            timeoutPromise,
+        ])
+        subscription = result?.subscription ?? null
+        plan = result?.plan ?? null
     } catch (e) {
-        console.error('Subscription check failed:', e)
+        console.error('[Dashboard Layout] Subscription check failed:', e instanceof Error ? e.message : e)
     }
 
     // Allow access to pricing pages without subscription

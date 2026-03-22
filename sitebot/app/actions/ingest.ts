@@ -3,10 +3,9 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import FirecrawlApp from 'firecrawl'
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters'
-import { OpenAIEmbeddings } from '@langchain/openai'
-import { Pinecone } from '@pinecone-database/pinecone'
 import { logInfo, logError } from '@/lib/logger'
 import mammoth from 'mammoth'
+import { getEmbeddingsModel } from '@/lib/ai-models'
 
 // Ingest website content (Crawl entire site)
 export async function ingestWebsite(chatbotId: string, url: string, sourceId?: string) {
@@ -18,13 +17,10 @@ export async function ingestWebsite(chatbotId: string, url: string, sourceId?: s
 
         // 1. Submit Crawl Job
         logInfo('IngestWebsite', 'Submitting crawl job...')
-        // Fix: Use 'startCrawl' for async job submission (v2 SDK). 'crawl' is a blocking waiter.
         const crawlResponse = await (firecrawl as any).startCrawl(url, {
-            // limit: Removed to allow full site crawling
             scrapeOptions: { formats: ['markdown'] }
         })
 
-        // SDK v2 typically returns { success: true, id: '...' } or just { id: '...' } depending on error
         if (!crawlResponse.id) {
             logError('IngestWebsite', `Response dump: ${JSON.stringify(crawlResponse)}`)
             throw new Error(`Failed to start crawl: ${crawlResponse.error || 'Unknown error'}`)
@@ -33,7 +29,7 @@ export async function ingestWebsite(chatbotId: string, url: string, sourceId?: s
         const jobId = crawlResponse.id
         logInfo('IngestWebsite', `Job started: ${jobId}. Polling...`)
 
-        // 2. Poll for Completion (Max 300s - increased for larger sites)
+        // 2. Poll for Completion (Max 300s)
         let isCompleting = false
         let crawlResult: any = null
         const startTime = Date.now()
@@ -43,7 +39,6 @@ export async function ingestWebsite(chatbotId: string, url: string, sourceId?: s
             if (Date.now() - startTime > MAX_WAIT) throw new Error('Crawl timed out (300s limit)')
 
             await new Promise(r => setTimeout(r, 5000)) // Poll every 5s
-            // Fix: Use 'getCrawlStatus' (v2 SDK)
             const statusFn = await (firecrawl as any).getCrawlStatus(jobId)
 
             if (statusFn.status === 'completed') {
@@ -59,17 +54,15 @@ export async function ingestWebsite(chatbotId: string, url: string, sourceId?: s
         const pages = crawlResult.data || []
         let totalChunks = 0
 
-        // Cleanup old website vectors ... (simplified logic from original)
-        try {
-            if (sourceId) {
-                // Determine cleanup logic if needed
-            }
-        } catch (e) {
-            console.warn('Website cleanup skipped', e)
+        // 3.0 Cleanup old website vectors for this source
+        if (sourceId) {
+            await adminClient
+                .from('documents')
+                .delete()
+                .eq('chatbot_id', chatbotId)
+                .eq('source_id', sourceId)
+            logInfo('IngestWebsite', `Cleaned up old vectors for sourceId: ${sourceId}`)
         }
-
-        const pinecone = new Pinecone()
-        const index = pinecone.index(process.env.PINECONE_INDEX!)
 
         for (const page of pages) {
             if (!page.markdown) continue
@@ -78,44 +71,50 @@ export async function ingestWebsite(chatbotId: string, url: string, sourceId?: s
             const chunks = await splitter.createDocuments([page.markdown])
             if (chunks.length === 0) continue
 
-            // 3.1 Per-Page Cleanup
+            const pageUrl = page.metadata?.sourceURL || url
+
+            // 3.1 Per-page cleanup (by URL)
             try {
-                const targetUrl = page.metadata?.sourceURL || url
-                console.log(`Cleaning up old vectors for URL: ${targetUrl}`)
-                await index.deleteMany({
-                    chatbotId,
-                    source: 'website',
-                    url: targetUrl
-                })
+                await adminClient
+                    .from('documents')
+                    .delete()
+                    .eq('chatbot_id', chatbotId)
+                    .eq('source_url', pageUrl)
             } catch (cleanupErr) {
-                console.warn(`Failed to cleanup vectors for ${page.metadata?.sourceURL}:`, cleanupErr)
+                console.warn(`Failed to cleanup vectors for ${pageUrl}:`, cleanupErr)
             }
 
-            const embeddings = new OpenAIEmbeddings({ model: 'text-embedding-3-small' })
-            const vectors = await Promise.all(chunks.map(async (chunk, i) => {
-                const vector = await embeddings.embedQuery(chunk.pageContent)
+            // 3.2 Generate embeddings and store
+            const embeddings = getEmbeddingsModel('text-embedding-3-small')
+            
+            const BATCH_SIZE = 25
+            for (let batchStart = 0; batchStart < chunks.length; batchStart += BATCH_SIZE) {
+                const batch = chunks.slice(batchStart, batchStart + BATCH_SIZE)
+                const batchTexts = batch.map(c => c.pageContent)
+                const batchEmbeddings = await embeddings.embedDocuments(batchTexts)
 
-                // Deterministic ID based on URL
-                const urlHash = Buffer.from(page.metadata?.sourceURL || url).toString('base64').replace(/[^a-zA-Z0-9]/g, '').substring(0, 32)
-                const vectorId = `${chatbotId}_web_${urlHash}_${i}`
+                const rows = batch.map((chunk, i) => ({
+                    chatbot_id: chatbotId,
+                    content: chunk.pageContent,
+                    embedding: JSON.stringify(batchEmbeddings[i]),
+                    source_type: 'website',
+                    source_id: sourceId || '',
+                    source_url: pageUrl,
+                    source_label: url,
+                    chunk_index: batchStart + i,
+                    metadata: { url: pageUrl }
+                }))
 
-                return {
-                    id: vectorId,
-                    values: vector,
-                    metadata: {
-                        chatbotId,
-                        source: 'website',
-                        url: page.metadata?.sourceURL || url,
-                        content: chunk.pageContent,
-                        sourceId: sourceId || ''
-                    }
+                const { error } = await adminClient
+                    .from('documents')
+                    .insert(rows)
+
+                if (error) {
+                    console.error('[IngestWebsite] Supabase insert error:', error)
+                    throw new Error(`Failed to store vectors: ${error.message}`)
                 }
-            }))
-
-            const BATCH_SIZE = 50
-            for (let i = 0; i < vectors.length; i += BATCH_SIZE) {
-                await index.upsert(vectors.slice(i, i + BATCH_SIZE))
             }
+
             totalChunks += chunks.length
         }
         logInfo('IngestWebsite', `Total Chunks Processed: ${totalChunks}`)
@@ -150,43 +149,20 @@ export async function ingestText(chatbotId: string, textContent: string, sourceL
 
     try {
         console.log(`Ingesting text for ${chatbotId}...`)
-        const pinecone = new Pinecone()
-        const index = pinecone.index(process.env.PINECONE_INDEX!)
 
-        // 1. Cleanup old vectors
-        if (sourceId || sourceLabel) {
-            try {
-                const filter = {
-                    chatbotId,
-                    ...(sourceLabel ? { sourceLabel } : {})
-                }
-
-                console.log(`Attempting to delete old vectors with filter:`, JSON.stringify(filter))
-                await index.deleteMany(filter)
-                console.log('Cleanup successful')
-            } catch (cleanupError) {
-                console.warn('Vector cleanup via filter failed. Trying fallback...')
-                try {
-                    const zeroVector = new Array(1536).fill(0)
-                    const searchResult = await index.query({
-                        vector: zeroVector,
-                        topK: 1000,
-                        includeValues: false,
-                        includeMetadata: true,
-                        filter: { chatbotsId: chatbotId, ...(sourceLabel ? { sourceLabel } : {}) }
-                    })
-                    // Note: Typo in original 'chatbotsId' vs 'chatbotId'? Standardize on 'chatbotId'.
-                    // Code used 'chatbotId' in filter above.
-                    // Assuming standard schema.
-
-                    const vectorIdsToDelete = searchResult.matches?.map(m => m.id) || []
-                    if (vectorIdsToDelete.length > 0) {
-                        await index.deleteMany(vectorIdsToDelete)
-                    }
-                } catch (fallbackError) {
-                    console.error('Final cleanup verification failed:', fallbackError)
-                }
-            }
+        // 1. Cleanup old vectors for this source
+        if (sourceId) {
+            await adminClient
+                .from('documents')
+                .delete()
+                .eq('chatbot_id', chatbotId)
+                .eq('source_id', sourceId)
+        } else if (sourceLabel) {
+            await adminClient
+                .from('documents')
+                .delete()
+                .eq('chatbot_id', chatbotId)
+                .eq('source_label', sourceLabel)
         }
 
         const splitter = new RecursiveCharacterTextSplitter({
@@ -196,34 +172,34 @@ export async function ingestText(chatbotId: string, textContent: string, sourceL
         const chunks = await splitter.createDocuments([textContent])
         console.log(`Generated ${chunks.length} chunks from text`)
 
-        const embeddings = new OpenAIEmbeddings({ model: 'text-embedding-3-small' })
+        const embeddings = getEmbeddingsModel('text-embedding-3-small')
 
-        const vectors = await Promise.all(
-            chunks.map(async (chunk, i) => {
-                const vector = await embeddings.embedQuery(chunk.pageContent)
-                const vectorId = sourceId
-                    ? `${sourceId}_${i}`
-                    : `${chatbotId}_text_${Date.now()}_${i}`
+        // 2. Batch embed and insert
+        const BATCH_SIZE = 25
+        for (let batchStart = 0; batchStart < chunks.length; batchStart += BATCH_SIZE) {
+            const batch = chunks.slice(batchStart, batchStart + BATCH_SIZE)
+            const batchTexts = batch.map(c => c.pageContent)
+            const batchEmbeddings = await embeddings.embedDocuments(batchTexts)
 
-                return {
-                    id: vectorId,
-                    values: vector,
-                    metadata: {
-                        chatbotId,
-                        source: 'text',
-                        sourceLabel,
-                        sourceId: sourceId || '',
-                        content: chunk.pageContent,
-                        chunkIndex: i,
-                    },
-                }
-            })
-        )
+            const rows = batch.map((chunk, i) => ({
+                chatbot_id: chatbotId,
+                content: chunk.pageContent,
+                embedding: JSON.stringify(batchEmbeddings[i]),
+                source_type: sourceLabel.startsWith('csv:') ? 'csv' : sourceLabel.startsWith('file:') ? 'file' : 'text',
+                source_id: sourceId || '',
+                source_label: sourceLabel,
+                chunk_index: batchStart + i,
+                metadata: { sourceLabel }
+            }))
 
-        const BATCH_SIZE = 100
-        for (let i = 0; i < vectors.length; i += BATCH_SIZE) {
-            const batch = vectors.slice(i, i + BATCH_SIZE)
-            await index.upsert(batch)
+            const { error } = await adminClient
+                .from('documents')
+                .insert(rows)
+
+            if (error) {
+                console.error('[IngestText] Supabase insert error:', error)
+                throw new Error(`Failed to store vectors: ${error.message}`)
+            }
         }
 
         if (sourceId) {

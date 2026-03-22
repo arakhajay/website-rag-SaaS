@@ -166,10 +166,13 @@ export async function getTrainingSources(chatbotId: string) {
 export async function deleteTrainingSource(sourceId: string) {
     const adminClient = createAdminClient()
 
-    // 1. Get source details to delete vectors (Phase 2 requirement)
-    // For now, we just delete the DB record. 
-    // TODO: Implement Pinecone vector deletion by metadata filter.
+    // 1. Delete associated vectors from documents table
+    await adminClient
+        .from('documents')
+        .delete()
+        .eq('source_id', sourceId)
 
+    // 2. Delete the source record
     const { error } = await adminClient
         .from('training_sources')
         .delete()

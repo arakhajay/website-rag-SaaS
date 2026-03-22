@@ -10,14 +10,28 @@ import { getMonthlyUsage, getTrainingUsage, getDailySessions } from '@/app/actio
 import { getSubscriptionWithPlan } from '@/app/actions/subscription'
 
 export default async function DashboardPage() {
-    // Fetch all data in PARALLEL to eliminate waterfall
-    const [chatbotsResult, usageData, trainingData, sessionsData, subscriptionData] = await Promise.all([
+    // Fetch all data in PARALLEL with individual error protection
+    const [chatbotsSettled, usageSettled, trainingSettled, sessionsSettled, subscriptionSettled] = await Promise.allSettled([
         getChatbots(),
         getMonthlyUsage(),
         getTrainingUsage(),
         getDailySessions(),
         getSubscriptionWithPlan(),
     ])
+
+    // Safe extraction with defaults — partial failures don't crash the page
+    const chatbotsResult = chatbotsSettled.status === 'fulfilled' ? chatbotsSettled.value : { chatbots: [] }
+    const usageData = usageSettled.status === 'fulfilled' ? usageSettled.value : { used: 0, limit: 0, percentage: 0 }
+    const trainingData = trainingSettled.status === 'fulfilled' ? trainingSettled.value : { used: 0, limit: 0, percentage: 0 }
+    const sessionsData = sessionsSettled.status === 'fulfilled' ? sessionsSettled.value : []
+    const subscriptionData = subscriptionSettled.status === 'fulfilled' ? subscriptionSettled.value : { subscription: null, plan: null }
+
+    // Log any failures for debugging
+    const failures = [chatbotsSettled, usageSettled, trainingSettled, sessionsSettled, subscriptionSettled]
+        .filter(r => r.status === 'rejected')
+    if (failures.length > 0) {
+        console.error('[Dashboard] Some data fetches failed:', failures.map(f => (f as PromiseRejectedResult).reason?.message || 'Unknown'))
+    }
 
     const { chatbots } = chatbotsResult
     const { plan } = subscriptionData

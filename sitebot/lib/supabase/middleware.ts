@@ -6,90 +6,111 @@ export async function updateSession(request: NextRequest) {
         request,
     })
 
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() {
-                    return request.cookies.getAll()
-                },
-                setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-                    supabaseResponse = NextResponse.next({
-                        request,
-                    })
-                    cookiesToSet.forEach(({ name, value, options }) =>
-                        supabaseResponse.cookies.set(name, value, {
-                            ...options,
-                            // Ensure cookies work behind load balancer (HTTPS termination at LB, HTTP to instance)
-                            secure: request.headers.get('x-forwarded-proto') === 'https',
-                        })
-                    )
-                },
-            },
+    try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+        if (!supabaseUrl || !supabaseAnonKey) {
+            console.error('[Middleware] Missing SUPABASE env vars — skipping auth check')
+            return supabaseResponse
         }
-    )
 
-    // IMPORTANT: Avoid writing any logic between createServerClient and
-    // supabase.auth.getUser(). A simple mistake can make it very hard to debug
-    // issues with users being randomly logged out.
-    const {
-        data: { user },
-    } = await supabase.auth.getUser()
+        const supabase = createServerClient(
+            supabaseUrl,
+            supabaseAnonKey,
+            {
+                cookies: {
+                    getAll() {
+                        return request.cookies.getAll()
+                    },
+                    setAll(cookiesToSet) {
+                        cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+                        supabaseResponse = NextResponse.next({
+                            request,
+                        })
+                        cookiesToSet.forEach(({ name, value, options }) =>
+                            supabaseResponse.cookies.set(name, value, {
+                                ...options,
+                                // Ensure cookies work behind load balancer (HTTPS termination at LB, HTTP to instance)
+                                secure: request.headers.get('x-forwarded-proto') === 'https',
+                            })
+                        )
+                    },
+                },
+            }
+        )
 
-    const pathname = request.nextUrl.pathname
-    const isLoginRoute = pathname.startsWith('/login')
-    const isAuthCallbackRoute = pathname.startsWith('/auth')
-    const isProtectedRoute = pathname.startsWith('/dashboard')
-    const isAdminRoute = pathname.startsWith('/admin')
+        // IMPORTANT: Avoid writing any logic between createServerClient and
+        // supabase.auth.getUser(). A simple mistake can make it very hard to debug
+        // issues with users being randomly logged out.
+        const {
+            data: { user },
+        } = await supabase.auth.getUser()
 
-    // ============================================
-    // ADMIN ROUTE PROTECTION
-    // ============================================
-    if (isAdminRoute) {
-        // Not authenticated → redirect to login
-        if (!user) {
+        const pathname = request.nextUrl.pathname
+        const isLoginRoute = pathname.startsWith('/login')
+        const isAuthCallbackRoute = pathname.startsWith('/auth')
+        const isProtectedRoute = pathname.startsWith('/dashboard')
+        const isAdminRoute = pathname.startsWith('/admin')
+
+        // ============================================
+        // ADMIN ROUTE PROTECTION
+        // ============================================
+        if (isAdminRoute) {
+            // Not authenticated → redirect to login
+            if (!user) {
+                const url = request.nextUrl.clone()
+                url.pathname = '/login'
+                url.searchParams.set('redirect', pathname)
+                return NextResponse.redirect(url)
+            }
+
+            // Check if user is super_admin
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', user.id)
+                    .single()
+
+                if (profile?.role !== 'super_admin') {
+                    // Not a super_admin → return 404 to hide admin route existence
+                    const url = request.nextUrl.clone()
+                    url.pathname = '/not-found'
+                    return NextResponse.rewrite(url)
+                }
+            } catch (adminErr) {
+                console.error('[Middleware] Admin role check failed:', adminErr)
+                const url = request.nextUrl.clone()
+                url.pathname = '/not-found'
+                return NextResponse.rewrite(url)
+            }
+        }
+
+        // ============================================
+        // DASHBOARD ROUTE PROTECTION
+        // ============================================
+        // If user is trying to access protected route but hasn't logged in, redirect to login
+        if (!user && isProtectedRoute) {
             const url = request.nextUrl.clone()
             url.pathname = '/login'
-            url.searchParams.set('redirect', pathname)
             return NextResponse.redirect(url)
         }
 
-        // Check if user is super_admin
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single()
-
-        if (profile?.role !== 'super_admin') {
-            // Not a super_admin → return 404 to hide admin route existence
+        // If user is already logged in and tries to access login page, redirect to dashboard
+        // Only redirect distinct GET requests to allow Server Actions (POST) to complete
+        if (user && isLoginRoute && request.method === 'GET') {
             const url = request.nextUrl.clone()
-            url.pathname = '/not-found'
-            return NextResponse.rewrite(url)
+            url.pathname = '/dashboard'
+            return NextResponse.redirect(url)
         }
-    }
-
-    // ============================================
-    // DASHBOARD ROUTE PROTECTION
-    // ============================================
-    // If user is trying to access protected route but hasn't logged in, redirect to login
-    if (!user && isProtectedRoute) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/login'
-        return NextResponse.redirect(url)
-    }
-
-    // If user is already logged in and tries to access login page, redirect to dashboard
-    // Only redirect distinct GET requests to allow Server Actions (POST) to complete
-    if (user && isLoginRoute && request.method === 'GET') {
-        const url = request.nextUrl.clone()
-        url.pathname = '/dashboard'
-        return NextResponse.redirect(url)
+    } catch (error) {
+        console.error('[Middleware] Critical error — falling through:', error instanceof Error ? error.message : error)
+        // Don't crash the entire app — fall through to let the page handle it
     }
 
     // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
     // creating a new response logic, you must step through the supabaseResponse object.
     return supabaseResponse
 }
+

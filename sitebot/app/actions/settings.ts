@@ -21,6 +21,7 @@ export interface ChatbotSettings {
     }
     messaging: {
         model?: string
+        embedding_model?: string
         conversational_mode?: boolean
         strict_faq?: boolean
         response_length?: 'short' | 'medium' | 'long'
@@ -97,7 +98,8 @@ export async function getChatbotSettings(chatbotId: string) {
                 placeholder: 'Type your message...'
             },
             messaging: {
-                model: 'gpt-4o-mini',
+                model: 'gemini-2.0-flash',
+                embedding_model: 'text-embedding-3-small',
                 response_length: 'medium',
                 show_sources: true,
                 show_floating_welcome_message: true,
