@@ -255,35 +255,39 @@ export async function addTrainingSource(chatbotId: string, type: 'website' | 'te
 
     if (error) return { success: false, error: error.message }
 
-    // 3. Trigger Ingestion
+    // 3. Trigger Ingestion (Asynchronous)
     try {
         const { ingestWebsite, ingestText, ingestFile, ingestCSV } = await import('./ingest')
-        let result: { success: boolean; error?: string; [key: string]: any } = { success: false, error: 'Unknown type' }
+        
+        // Fire and forget so we don't block the UI
+        ;(async () => {
+            try {
+                let result: { success: boolean; error?: string; [key: string]: any } = { success: false, error: 'Unknown type' }
 
-        if (type === 'website') {
-            result = await ingestWebsite(chatbotId, String(content), source.id)
-        } else if (type === 'text') {
-            result = await ingestText(chatbotId, String(content), source.id != null ? sourceName : 'direct-text', source.id)
-        } else if (type === 'file' && fileBuffer) {
-            result = await ingestFile(chatbotId, sourceName, fileBuffer, source.id)
-        } else if (type === 'csv' && fileBuffer) {
-            const text = fileBuffer.toString('utf-8')
-            result = await ingestCSV(chatbotId, sourceName, text, source.id)
-        }
+                if (type === 'website') {
+                    result = await ingestWebsite(chatbotId, String(content), source.id)
+                } else if (type === 'text') {
+                    result = await ingestText(chatbotId, String(content), source.id != null ? sourceName : 'direct-text', source.id)
+                } else if (type === 'file' && fileBuffer) {
+                    result = await ingestFile(chatbotId, sourceName, fileBuffer, source.id)
+                } else if (type === 'csv' && fileBuffer) {
+                    const text = fileBuffer.toString('utf-8')
+                    result = await ingestCSV(chatbotId, sourceName, text, source.id)
+                }
 
-        if (!result.success) {
-            // Error handling is done inside ingest functions (they record update/delete)
-            // But we can throw here to return false to UI
-            throw new Error(result.error as string)
-        }
+                if (!result.success) {
+                    console.error('[Ingest Worker] Failed:', result.error)
+                    // The ingest function natively handles status updates now
+                }
+            } catch (jobError) {
+                console.error('[Ingest Worker] Uncaught Error:', jobError)
+            }
+        })()
 
         return { success: true, source }
 
     } catch (e: any) {
-        console.error('Ingest trigger failed:', e)
-        // Cleanup if ingest function didn't already
-        // But since we passed source.id, ingest function SHOULD have cleaned up.
-        // We double check or just return failure.
+        console.error('Ingest trigger setup failed:', e)
         return { success: false, error: e.message }
     }
 }

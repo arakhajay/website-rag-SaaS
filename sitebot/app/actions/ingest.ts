@@ -2,7 +2,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import FirecrawlApp from 'firecrawl'
-import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters'
+import { SentenceSplitter, Document } from 'llamaindex'
 import { logInfo, logError } from '@/lib/logger'
 import mammoth from 'mammoth'
 import { getEmbeddingsModel } from '@/lib/ai-models'
@@ -67,8 +67,9 @@ export async function ingestWebsite(chatbotId: string, url: string, sourceId?: s
         for (const page of pages) {
             if (!page.markdown) continue
 
-            const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000, chunkOverlap: 200 })
-            const chunks = await splitter.createDocuments([page.markdown])
+            const splitter = new SentenceSplitter({ chunkSize: 1000, chunkOverlap: 200 })
+            const doc = new Document({ text: page.markdown, id_: pageUrl })
+            const chunks = splitter.splitText(doc.text).map(t => ({ pageContent: t }))
             if (chunks.length === 0) continue
 
             const pageUrl = page.metadata?.sourceURL || url
@@ -121,13 +122,14 @@ export async function ingestWebsite(chatbotId: string, url: string, sourceId?: s
 
         // 4. Record/Update Source
         if (sourceId) {
-            await adminClient.from('training_sources').update({ chunks_count: totalChunks }).eq('id', sourceId)
+            await adminClient.from('training_sources').update({ chunks_count: totalChunks, status: 'completed' }).eq('id', sourceId)
         } else {
             await adminClient.from('training_sources').insert({
                 chatbot_id: chatbotId,
                 source_type: 'website',
                 source_name: url,
-                chunks_count: totalChunks
+                chunks_count: totalChunks,
+                status: 'completed'
             })
         }
 
@@ -136,8 +138,8 @@ export async function ingestWebsite(chatbotId: string, url: string, sourceId?: s
     } catch (error: any) {
         logError('IngestWebsite', error)
         if (sourceId) {
-            await adminClient.from('training_sources').delete().eq('id', sourceId)
-            logInfo('IngestWebsite', `Cleanup: Deleted source ${sourceId}`)
+            await adminClient.from('training_sources').update({ status: 'failed', error_message: error.message }).eq('id', sourceId)
+            logInfo('IngestWebsite', `Marked source ${sourceId} as failed`)
         }
         return { success: false, error: error.message }
     }
@@ -165,11 +167,11 @@ export async function ingestText(chatbotId: string, textContent: string, sourceL
                 .eq('source_label', sourceLabel)
         }
 
-        const splitter = new RecursiveCharacterTextSplitter({
+        const splitter = new SentenceSplitter({
             chunkSize: 1000,
             chunkOverlap: 200,
         })
-        const chunks = await splitter.createDocuments([textContent])
+        const chunks = splitter.splitText(textContent).map(t => ({ pageContent: t }))
         console.log(`Generated ${chunks.length} chunks from text`)
 
         const embeddings = getEmbeddingsModel('text-embedding-3-small')
@@ -203,13 +205,14 @@ export async function ingestText(chatbotId: string, textContent: string, sourceL
         }
 
         if (sourceId) {
-            await adminClient.from('training_sources').update({ chunks_count: chunks.length }).eq('id', sourceId)
+            await adminClient.from('training_sources').update({ chunks_count: chunks.length, status: 'completed' }).eq('id', sourceId)
         } else {
             await adminClient.from('training_sources').insert({
                 chatbot_id: chatbotId,
                 source_type: 'text',
                 source_name: sourceLabel,
-                chunks_count: chunks.length
+                chunks_count: chunks.length,
+                status: 'completed'
             })
         }
 
@@ -219,7 +222,7 @@ export async function ingestText(chatbotId: string, textContent: string, sourceL
     } catch (error: any) {
         console.error('Text ingestion failed:', error)
         if (sourceId) {
-            await adminClient.from('training_sources').delete().eq('id', sourceId)
+            await adminClient.from('training_sources').update({ status: 'failed', error_message: error.message }).eq('id', sourceId)
         }
         return { success: false, error: error.message }
     }
@@ -232,32 +235,55 @@ export async function ingestFile(chatbotId: string, fileName: string, fileBuffer
 
     let textContent = ''
 
-    if (fileType === 'pdf') {
+    if (fileType === 'pdf' || fileType === 'docx') {
         try {
-            const pdf = require('pdf-parse')
-            const data = await pdf(fileBuffer)
-            textContent = data.text
-            logInfo('IngestFile', `PDF Parsed: ${textContent.length} chars`)
+            logInfo('IngestFile', `Calling LlamaParse API for ${fileName}...`)
+            const formData = new FormData()
+            formData.append('file', new Blob([fileBuffer]), fileName)
+
+            const uploadRes = await fetch('https://api.cloud.llamaindex.ai/api/parsing/upload', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${process.env.LLAMA_CLOUD_API_KEY}` },
+                body: formData
+            })
+            
+            if (!uploadRes.ok) throw new Error(`LlamaParse Upload Failed: ${uploadRes.statusText}`)
+            const uploadData = await uploadRes.json()
+            const jobId = uploadData.id
+
+            // Poll for result
+            let resultMarkdown: string | null = null
+            let retries = 0
+            while (!resultMarkdown && retries < 60) {
+                await new Promise(r => setTimeout(r, 2000))
+                retries++
+                const statusRes = await fetch(`https://api.cloud.llamaindex.ai/api/parsing/job/${jobId}`, {
+                    headers: { 'Authorization': `Bearer ${process.env.LLAMA_CLOUD_API_KEY}` }
+                })
+                const statusData = await statusRes.json()
+                
+                if (statusData.status === 'SUCCESS') {
+                    const markdownRes = await fetch(`https://api.cloud.llamaindex.ai/api/parsing/job/${jobId}/result/markdown`, {
+                        headers: { 'Authorization': `Bearer ${process.env.LLAMA_CLOUD_API_KEY}` }
+                    })
+                    const markdownData = await markdownRes.json()
+                    resultMarkdown = markdownData.markdown
+                } else if (statusData.status === 'ERROR' || statusData.status === 'FAILED') {
+                     throw new Error("LlamaParse failed to process document")
+                }
+            }
+            
+            if (!resultMarkdown) throw new Error("LlamaParse timed out after 120 seconds")
+            textContent = resultMarkdown
+            
+            logInfo('IngestFile', `LlamaParse Extracted: ${textContent.length} chars`)
         } catch (e: any) {
             logError('IngestFile', e)
             if (sourceId) {
                 const adminClient = createAdminClient()
-                await adminClient.from('training_sources').delete().eq('id', sourceId)
+                await adminClient.from('training_sources').update({ status: 'failed', error_message: `Failed to parse ${fileType.toUpperCase()}` }).eq('id', sourceId)
             }
-            throw new Error('Failed to parse PDF')
-        }
-    } else if (fileType === 'docx') {
-        try {
-            const result = await mammoth.extractRawText({ buffer: fileBuffer })
-            textContent = result.value
-            logInfo('IngestFile', `DOCX Parsed: ${textContent.length} chars`)
-        } catch (e: any) {
-            logError('IngestFile', e)
-            if (sourceId) {
-                const adminClient = createAdminClient()
-                await adminClient.from('training_sources').delete().eq('id', sourceId)
-            }
-            throw new Error('Failed to parse DOCX')
+            throw new Error(`Failed to parse ${fileType.toUpperCase()}`)
         }
     } else {
         textContent = fileBuffer.toString('utf-8')
@@ -330,7 +356,7 @@ export async function ingestCSV(chatbotId: string, fileName: string, csvContent:
     } catch (error: any) {
         console.error('CSV ingestion failed:', error)
         if (sourceId) {
-            await adminClient.from('training_sources').delete().eq('id', sourceId)
+            await adminClient.from('training_sources').update({ status: 'failed', error_message: error.message }).eq('id', sourceId)
         }
         return { success: false, error: error.message }
     }

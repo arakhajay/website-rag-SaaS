@@ -20,7 +20,7 @@ A professional, RAG-powered AI chatbot platform for creating custom assistants t
 | 📝 **Text/MD Files**          | ✅ Complete | Upload and parse text files                                  |
 | ✏️ **Direct Text**            | ✅ Complete | Paste any content                                            |
 | 📊 **CSV/SQL Data**           | ✅ Complete | Structured data with natural language queries                |
-| 📄 **PDF Files**              | ✅ Complete | Parse PDF documents                                          |
+| 📄 **PDF Files**              | ✅ Complete | Parse PDF & DOCX via **LlamaIndex/LlamaParse**               |
 | 💬 **Chat Interface**         | ✅ Complete | Streaming + Markdown rendering                               |
 | 🔀 **Hybrid RAG**             | ✅ Complete | Supabase pgvector + SQL Agent                                |
 | 🧩 **Embed Widget**           | ✅ Complete | Dynamic styling, User Form, Working Hours, Starter Questions |
@@ -73,6 +73,8 @@ A professional, RAG-powered AI chatbot platform for creating custom assistants t
 | Embeddings| OpenAI text-embedding-3-small       |
 | Payments  | Dodo Payments                       |
 | Web Crawl | Firecrawl                           |
+| Parsing   | LlamaParse (REST API)               |
+| Chunking  | LlamaIndex (SentenceSplitter)       |
 | Widget    | Preact + Vite (60KB bundle)         |
 | UI        | Radix UI, shadcn/ui                 |
 
@@ -121,6 +123,7 @@ GOOGLE_GENERATIVE_AI_API_KEY=
 FIRECRAWL_API_KEY=
 DODO_PAYMENTS_API_KEY=
 DODO_PAYMENTS_WEBHOOK_SECRET=
+LLAMA_CLOUD_API_KEY=
 \\\
 
 ## 📝 License

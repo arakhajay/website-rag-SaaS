@@ -175,8 +175,8 @@ export async function POST(req: Request) {
                 const { data: results, error } = await adminClient.rpc('match_documents', {
                     query_embedding: JSON.stringify(vector),
                     match_chatbot_id: chatbotId,
-                    match_count: 3,
-                    match_threshold: 0.5
+                    match_count: 5,
+                    match_threshold: 0.2
                 })
 
                 if (error) {

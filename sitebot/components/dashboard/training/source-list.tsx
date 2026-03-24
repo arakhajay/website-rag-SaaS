@@ -53,8 +53,10 @@ export function SourceList({ chatbotId, refreshTrigger }: { chatbotId: string, r
                             <span className="font-medium text-sm truncate block">{source.source_name}</span>
                         </div>
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
-                            {source.chunks_count > 0 ? (
+                            {source.status === 'completed' || source.chunks_count > 0 && source.status !== 'failed' ? (
                                 <><CheckCircle className="h-3 w-3 text-green-500" /> Indexed ({source.chunks_count} chunks)</>
+                            ) : source.status === 'failed' ? (
+                                <><span className="text-destructive font-medium flex items-center gap-1">Failed: {source.error_message || "Unknown error"}</span></>
                             ) : (
                                 <><Loader2 className="h-3 w-3 animate-spin text-amber-500" /> Indexing...</>
                             )}
