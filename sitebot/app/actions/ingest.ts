@@ -67,12 +67,12 @@ export async function ingestWebsite(chatbotId: string, url: string, sourceId?: s
         for (const page of pages) {
             if (!page.markdown) continue
 
+            const pageUrl = page.metadata?.sourceURL || url
+
             const splitter = new SentenceSplitter({ chunkSize: 1000, chunkOverlap: 200 })
             const doc = new Document({ text: page.markdown, id_: pageUrl })
             const chunks = splitter.splitText(doc.text).map(t => ({ pageContent: t }))
             if (chunks.length === 0) continue
-
-            const pageUrl = page.metadata?.sourceURL || url
 
             // 3.1 Per-page cleanup (by URL)
             try {
