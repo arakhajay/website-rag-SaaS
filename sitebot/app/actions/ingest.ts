@@ -239,7 +239,7 @@ export async function ingestFile(chatbotId: string, fileName: string, fileBuffer
         try {
             logInfo('IngestFile', `Calling LlamaParse API for ${fileName}...`)
             const formData = new FormData()
-            formData.append('file', new Blob([fileBuffer]), fileName)
+            formData.append('file', new Blob([fileBuffer as any]), fileName)
 
             const uploadRes = await fetch('https://api.cloud.llamaindex.ai/api/parsing/upload', {
                 method: 'POST',
