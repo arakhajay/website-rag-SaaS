@@ -6,9 +6,10 @@ import { ApiSection } from "./api-section"
 
 interface ConnectManagerProps {
     chatbotId: string
+    chatbots?: any[]
 }
 
-export function ConnectManager({ chatbotId }: ConnectManagerProps) {
+export function ConnectManager({ chatbotId, chatbots = [] }: ConnectManagerProps) {
     return (
         <div className="space-y-6">
             <div>
@@ -22,7 +23,7 @@ export function ConnectManager({ chatbotId }: ConnectManagerProps) {
                     <TabsTrigger value="api">REST API</TabsTrigger>
                 </TabsList>
                 <TabsContent value="embed" className="mt-6">
-                    <EmbedSection chatbotId={chatbotId} />
+                    <EmbedSection chatbotId={chatbotId} chatbots={chatbots} />
                 </TabsContent>
                 <TabsContent value="api" className="mt-6">
                     <ApiSection chatbotId={chatbotId} />

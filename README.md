@@ -26,7 +26,7 @@ A professional, RAG-powered AI chatbot platform for creating custom assistants t
 | 🧩 **Embed Widget**           | ✅ Complete | Dynamic styling, User Form, Working Hours, Starter Questions |
 | 📜 **Chat Logs**              | ✅ Complete | View grouped sessions, message history, and clear logs       |
 | ⚙️ **Extended Settings**      | ✅ Complete | Email, Security, User Forms, Working Hours, Switcher         |
-| 🔗 **Connect Tab**            | ✅ Complete | Embed Code & REST API Details                                |
+| 🔗 **Connect Tab**            | ✅ Complete | Dynamic Snippets (Script, Iframe, React) & Telegram Webhooks |
 | ⚡ **Guidelines & Workflows** | ✅ Complete | Behavioral control & Structured processes                    |
 | 📈 **Analytics Dashboard**    | ✅ Complete | Usage stats, AI Analyst, conversation metrics, session charts |
 | 🏠 **Dashboard Home**         | ✅ Complete | Real-time usage, training stats, and daily session chart     |
@@ -51,14 +51,42 @@ A professional, RAG-powered AI chatbot platform for creating custom assistants t
 - **Training Widget** - Training characters used
 - **Session Chart** - Daily chat sessions (last 7 days)
 
-## 🔌 Widget Embed Code
+## 🔌 Widget Integration Options
 
-\\\html
-<script
-    src="http://localhost:3000/widget.bundle.js"
-    data-chatbot-id="YOUR_CHATBOT_ID"
-></script>
-\\\
+The Connect dashboard provides dynamically generated integration codes for your specific chatbots:
+
+### 1. Standard HTML Script
+```html
+<script>
+  (function() {
+    var script = document.createElement('script');
+    script.src = "https://zivoxagent.com/widget.bundle.js";
+    script.setAttribute('data-chatbot-id', "YOUR_CHATBOT_ID");
+    script.setAttribute('data-base-url', "https://zivoxagent.com");
+    script.async = true;
+    document.body.appendChild(script);
+  })();
+</script>
+```
+
+### 2. React / Next.js Component
+```tsx
+"use client";
+import { useEffect } from 'react';
+
+export default function ChatbotRoot() {
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = "https://zivoxagent.com/widget.bundle.js";
+    script.setAttribute('data-chatbot-id', "YOUR_CHATBOT_ID");
+    script.setAttribute('data-base-url', "https://zivoxagent.com");
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
+
+  return null;
+}
+```
 
 ## ⚙️ Tech Stack
 

@@ -36,7 +36,7 @@ interface WidgetSettings {
   }
 }
 
-function Widget({ chatbotId }: { chatbotId: string }) {
+function Widget({ chatbotId, apiBaseUrl }: { chatbotId: string, apiBaseUrl: string }) {
   const [isOpen, setIsOpen] = useState(false)
   const [settings, setSettings] = useState<WidgetSettings | null>(null)
   const [loadingSettings, setLoadingSettings] = useState(true)
@@ -73,7 +73,7 @@ function Widget({ chatbotId }: { chatbotId: string }) {
   useEffect(() => {
     async function init() {
       try {
-        const res = await fetch(`http://localhost:3001/api/widget/settings?chatbotId=${chatbotId}`)
+        const res = await fetch(`${apiBaseUrl}/api/widget/settings?chatbotId=${chatbotId}`)
         const data = await res.json()
         if (data.settings) {
           setSettings(data.settings)
@@ -152,7 +152,7 @@ function Widget({ chatbotId }: { chatbotId: string }) {
     // For now, just gate the chat
     try {
       // Optional: Send lead to backend immediately
-      await fetch('http://localhost:3001/api/leads', {
+      await fetch(`${apiBaseUrl}/api/leads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -192,7 +192,7 @@ function Widget({ chatbotId }: { chatbotId: string }) {
         content: m.content
       }))
 
-      const response = await fetch('http://localhost:3001/api/chat', {
+      const response = await fetch(`${apiBaseUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -266,7 +266,7 @@ function Widget({ chatbotId }: { chatbotId: string }) {
         }
       }
 
-      const response = await fetch('http://localhost:3001/api/leads', {
+      const response = await fetch(`${apiBaseUrl}/api/leads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -636,6 +636,14 @@ function Widget({ chatbotId }: { chatbotId: string }) {
 // Initialization
 const scriptValues = document.currentScript
 const chatbotId = scriptValues?.getAttribute('data-chatbot-id')
+let apiBaseUrl = scriptValues?.getAttribute('data-base-url') || ''
+
+if (!apiBaseUrl && scriptValues && 'src' in scriptValues && scriptValues.src) {
+  try {
+    apiBaseUrl = new URL(scriptValues.src as string).origin
+  } catch(e) {}
+}
+if (!apiBaseUrl) apiBaseUrl = 'https://zivoxagent.com'
 
 if (chatbotId) {
   const container = document.createElement('div')
@@ -643,7 +651,7 @@ if (chatbotId) {
   document.body.appendChild(container)
 
   const shadow = container.attachShadow({ mode: 'open' })
-  render(<Widget chatbotId={chatbotId} />, shadow)
+  render(<Widget chatbotId={chatbotId} apiBaseUrl={apiBaseUrl} />, shadow)
 } else {
   console.error('Sitebot: No chatbot ID found.')
 }

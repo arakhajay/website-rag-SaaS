@@ -283,3 +283,4 @@ remember this" from Chat: 5250869899 (Bot: 91670030-b568-43b9-b74d-adf53a6aebc8)
 [2026-03-25T07:28:30.467Z] [Telegram Webhook] INFO: Invoking AI model: gpt-4o-mini
 [2026-03-25T07:28:32.377Z] [Telegram Webhook] INFO: Sending response to Telegram API...
 [2026-03-25T07:28:32.758Z] [Telegram Webhook] INFO: Response successfully sent to Telegram.
+[2026-03-25T16:44:04.364Z] [ChatRoute] INFO: Generating response for: hello

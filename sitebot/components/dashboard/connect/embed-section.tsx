@@ -4,32 +4,35 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Copy, Check } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 
 interface EmbedSectionProps {
     chatbotId: string
+    chatbots?: any[]
 }
 
-export function EmbedSection({ chatbotId }: EmbedSectionProps) {
+export function EmbedSection({ chatbotId, chatbots = [] }: EmbedSectionProps) {
     const [copied, setCopied] = useState(false)
-    const [scriptSrc, setScriptSrc] = useState('/widget.bundle.js')
+    const [baseUrl, setBaseUrl] = useState('')
+    const [embedType, setEmbedType] = useState('script')
+    const [selectedChatbotId, setSelectedChatbotId] = useState(chatbotId)
 
     // Set the full URL on client side after hydration
     useEffect(() => {
-        setScriptSrc(`${window.location.origin}/widget.bundle.js`)
+        setBaseUrl(window.location.origin)
     }, [])
 
-    const embedCode = `<script>
-  (function() {
-    var script = document.createElement('script');
-    script.src = "${scriptSrc}";
-    script.setAttribute('data-chatbot-id', "${chatbotId}");
-    script.async = true;
-    document.body.appendChild(script);
-  })();
-</script>`
+    const snippets: Record<string, string> = {
+        script: `<script>\n  (function() {\n    var script = document.createElement('script');\n    script.src = "${baseUrl}/widget.bundle.js";\n    script.setAttribute('data-chatbot-id', "${selectedChatbotId}");\n    script.setAttribute('data-base-url', "${baseUrl}");\n    script.async = true;\n    document.body.appendChild(script);\n  })();\n</script>`,
+        iframe: `<iframe\n  src="${baseUrl}/chat/${selectedChatbotId}"\n  width="100%"\n  height="600px"\n  frameBorder="0"\n  style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"\n></iframe>`,
+        react: `// Example React / Next.js Component\n"use client";\nimport { useEffect } from 'react';\n\nexport default function ChatbotRoot() {\n  useEffect(() => {\n    const script = document.createElement('script');\n    script.src = "${baseUrl}/widget.bundle.js";\n    script.setAttribute('data-chatbot-id', "${selectedChatbotId}");\n    script.setAttribute('data-base-url', "${baseUrl}");\n    script.async = true;\n    document.body.appendChild(script);\n  }, []);\n\n  return null;\n}`
+    }
+
+    const currentSnippet = snippets[embedType] || snippets.script
 
     const handleCopy = () => {
-        navigator.clipboard.writeText(embedCode)
+        navigator.clipboard.writeText(currentSnippet)
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
     }
@@ -40,14 +43,43 @@ export function EmbedSection({ chatbotId }: EmbedSectionProps) {
                 <CardHeader>
                     <CardTitle>Embed on your website</CardTitle>
                     <CardDescription>
-                        Copy and paste the code snippet below into your HTML code where you want to display the chatbot.
-                        Usually this goes before the closing <code>&lt;/body&gt;</code> tag.
+                        Copy and paste the code snippet below into your application where you want to display the chatbot.
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
+                    {chatbots && chatbots.length > 0 && (
+                        <div className="flex flex-col space-y-2">
+                            <Label htmlFor="chatbot-select">Select Chatbot</Label>
+                            <Select value={selectedChatbotId} onValueChange={setSelectedChatbotId}>
+                                <SelectTrigger id="chatbot-select" className="w-[300px]">
+                                    <SelectValue placeholder="Select a chatbot" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {chatbots.map(bot => (
+                                        <SelectItem key={bot.id} value={bot.id}>{bot.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
+
+                    <div className="flex flex-col space-y-2">
+                        <Label htmlFor="embed-type">Integration Method</Label>
+                        <Select value={embedType} onValueChange={setEmbedType}>
+                            <SelectTrigger id="embed-type" className="w-[250px]">
+                                <SelectValue placeholder="Select integration type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="script">HTML &lt;script&gt; (Standard)</SelectItem>
+                                <SelectItem value="iframe">HTML &lt;iframe&gt; (Page Inline)</SelectItem>
+                                <SelectItem value="react">React Component (Next.js/CRA)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     <div className="relative rounded-md bg-muted p-4">
-                        <pre className="overflow-x-auto text-sm">
-                            <code>{embedCode}</code>
+                        <pre className="overflow-x-auto text-sm text-foreground">
+                            <code>{currentSnippet}</code>
                         </pre>
                         <Button
                             size="icon"
