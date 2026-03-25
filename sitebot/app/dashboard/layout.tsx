@@ -34,7 +34,8 @@ export default async function DashboardLayout({
     let plan = null
     try {
         const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Subscription timeout')), 5000)
+            // Increased to 10000ms to allow for Supabase cold starts on local dev
+            setTimeout(() => reject(new Error('Subscription timeout')), 10000)
         )
         const result = await Promise.race([
             getSubscriptionWithPlan(),

@@ -22,18 +22,26 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           envs: NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_APP_URL,SUPABASE_SERVICE_ROLE_KEY,OPENAI_API_KEY,PINECONE_API_KEY,PINECONE_INDEX,FIRECRAWL_API_KEY,DODO_PAYMENTS_API_KEY,DODO_PAYMENTS_WEBHOOK_SECRET,DODO_PAYMENTS_IS_LIVE
           script: |
+            set -e
+            echo "Starting deployment..."
+            
             # Clone or pull latest code
             if [ ! -d "$HOME/website-rag-SaaS" ]; then
+              echo "Cloning repository..."
               git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git $HOME/website-rag-SaaS
             fi
 
             cd $HOME/website-rag-SaaS
 
+            echo "Fetching latest main branch..."
             git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
             git fetch origin main
             git reset --hard origin/main
+            
+            echo "Current commit:"
+            git log -1 --oneline
 
-            # Write .env from GitHub Secrets (re-written on every deploy)
+            echo "Writing .env file..."
             cat > $HOME/website-rag-SaaS/deploy/.env << EOF
             NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
             NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -48,15 +56,18 @@ jobs:
             DODO_PAYMENTS_IS_LIVE=$DODO_PAYMENTS_IS_LIVE
             EOF
 
-            # Rebuild and restart from deploy/ folder
+            echo "Rebuilding and restarting Docker containers..."
             cd $HOME/website-rag-SaaS/deploy
 
             docker compose down
             docker compose build --no-cache
             docker compose up -d
 
-            # Clean up dangling images
-            docker image prune -f
+            echo "Cleaning up dangling images..."
+            # || true prevents prune failure from failing the whole script if there's nothing to prune
+            docker image prune -f || true
+            
+            echo "Deployment completed successfully!"
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
