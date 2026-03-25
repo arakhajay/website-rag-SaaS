@@ -195,3 +195,91 @@
 [2026-03-24T12:05:42.027Z] [ChatRoute] INFO: Generating response for: what is embedding ?
 [2026-03-24T12:08:28.599Z] [ChatRoute] INFO: Generating response for: what is ajay's contact number ?
 [2026-03-24T12:12:46.559Z] [ChatRoute] INFO: Generating response for: thanks you for your ans
+[2026-03-24T14:29:35.003Z] [ChatRoute] INFO: Generating response for: what are your services ?
+[2026-03-24T15:13:41.674Z] [Telegram Webhook End-to-End Error] ERROR: {"stack":"SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)\n    at JSON.parse (<anonymous>)\n    at parseJSONFromBytes (node:internal/deps/undici/undici:5852:19)\n    at successSteps (node:internal/deps/undici/undici:5833:27)\n    at fullyReadBody (node:internal/deps/undici/undici:4725:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async consumeBody (node:internal/deps/undici/undici:5842:7)\n    at async POST (D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\.next\\dev\\server\\chunks\\[root-of-the-server]__4643b133._.js:640:22)\n    at async AppRouteRouteModule.do (D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\node_modules\\next\\dist\\compiled\\next-server\\app-route-turbo.runtime.dev.js:5:37866)\n    at async AppRouteRouteModule.handle (D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\node_modules\\next\\dist\\compiled\\next-server\\app-route-turbo.runtime.dev.js:5:45156)\n    at async responseGenerator (D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\.next\\dev\\server\\chunks\\node_modules_next_0ac06776._.js:16075:38)\n    at async AppRouteRouteModule.handleResponse (D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\node_modules\\next\\dist\\compiled\\next-server\\app-route-turbo.runtime.dev.js:1:187713)\n    at async handleResponse (D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\.next\\dev\\server\\chunks\\node_modules_next_0ac06776._.js:16138:32)\n    at async Module.handler (D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\.next\\dev\\server\\chunks\\node_modules_next_0ac06776._.js:16191:13)\n    at async DevServer.renderToResponseWithComponentsImpl (D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\node_modules\\next\\dist\\server\\base-server.js:1422:9)\n    at async DevServer.renderPageComponent (D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\node_modules\\next\\dist\\server\\base-server.js:1474:24)\n    at async DevServer.renderToResponseImpl (D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\node_modules\\next\\dist\\server\\base-server.js:1524:32)\n    at async DevServer.pipeImpl (D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\node_modules\\next\\dist\\server\\base-server.js:1018:25)\n    at async NextNodeServer.handleCatchallRenderRequest (D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\node_modules\\next\\dist\\server\\next-server.js:395:17)\n    at async DevServer.handleRequestImpl (D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\node_modules\\next\\dist\\server\\base-server.js:909:17)\n    at async D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:387:20\n    at async Span.traceAsyncFn (D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\node_modules\\next\\dist\\trace\\trace.js:157:20)\n    at async DevServer.handleRequest (D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:383:24)\n    at async invokeRender (D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\node_modules\\next\\dist\\server\\lib\\router-server.js:248:21)\n    at async handleRequest (D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\node_modules\\next\\dist\\server\\lib\\router-server.js:447:24)\n    at async requestHandlerImpl (D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\node_modules\\next\\dist\\server\\lib\\router-server.js:496:13)\n    at async Server.requestListener (D:\\Python-2025\\Antigravity\\website-RAGs-chatbot\\sitebot\\node_modules\\next\\dist\\server\\lib\\start-server.js:226:13)","message":"Expected property name or '}' in JSON at position 1 (line 1 column 2)"}
+[2026-03-24T15:15:37.251Z] [Telegram Webhook JSON Parse] ERROR: Failed to parse request body: SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+[2026-03-25T06:55:38.577Z] [Telegram Webhook] INFO: Query: "/start" from Chat: 5250869899 (Bot: 91670030-b568-43b9-b74d-adf53a6aebc8)
+[2026-03-25T06:55:39.180Z] [Telegram Webhook] INFO: Starting context retrieval (Vector + SQL)
+[2026-03-25T06:55:42.460Z] [Telegram Webhook] INFO: Retrieval complete. Vector: 0 chars, SQL: 385 chars
+[2026-03-25T06:55:42.562Z] [Telegram Webhook] INFO: Invoking AI model: gpt-4o-mini
+[2026-03-25T06:55:44.341Z] [Telegram Webhook] INFO: Sending response to Telegram API...
+[2026-03-25T06:55:44.672Z] [Telegram Webhook] INFO: Response successfully sent to Telegram.
+[2026-03-25T06:55:44.847Z] [Telegram Webhook] INFO: Query: "hello" from Chat: 5250869899 (Bot: 91670030-b568-43b9-b74d-adf53a6aebc8)
+[2026-03-25T06:55:44.950Z] [Telegram Webhook] INFO: Starting context retrieval (Vector + SQL)
+[2026-03-25T06:55:47.890Z] [Telegram Webhook] INFO: Retrieval complete. Vector: 8117 chars, SQL: 216 chars
+[2026-03-25T06:55:47.993Z] [Telegram Webhook] INFO: Invoking AI model: gpt-4o-mini
+[2026-03-25T06:55:49.335Z] [Telegram Webhook] INFO: Sending response to Telegram API...
+[2026-03-25T06:55:49.674Z] [Telegram Webhook] INFO: Response successfully sent to Telegram.
+[2026-03-25T06:55:49.844Z] [Telegram Webhook] INFO: Query: "Hello" from Chat: 5250869899 (Bot: 91670030-b568-43b9-b74d-adf53a6aebc8)
+[2026-03-25T06:55:49.943Z] [Telegram Webhook] INFO: Starting context retrieval (Vector + SQL)
+[2026-03-25T06:55:51.878Z] [Telegram Webhook] INFO: Retrieval complete. Vector: 3958 chars, SQL: 215 chars
+[2026-03-25T06:55:51.991Z] [Telegram Webhook] INFO: Invoking AI model: gpt-4o-mini
+[2026-03-25T06:55:53.643Z] [Telegram Webhook] INFO: Sending response to Telegram API...
+[2026-03-25T06:55:53.966Z] [Telegram Webhook] INFO: Response successfully sent to Telegram.
+[2026-03-25T06:55:54.135Z] [Telegram Webhook] INFO: Query: "what are your services ?" from Chat: 5250869899 (Bot: 91670030-b568-43b9-b74d-adf53a6aebc8)
+[2026-03-25T06:55:54.247Z] [Telegram Webhook] INFO: Starting context retrieval (Vector + SQL)
+[2026-03-25T06:55:56.542Z] [Telegram Webhook] INFO: Retrieval complete. Vector: 6930 chars, SQL: 257 chars
+[2026-03-25T06:55:56.641Z] [Telegram Webhook] INFO: Invoking AI model: gpt-4o-mini
+[2026-03-25T06:55:58.207Z] [Telegram Webhook] INFO: Sending response to Telegram API...
+[2026-03-25T06:55:58.548Z] [Telegram Webhook] INFO: Response successfully sent to Telegram.
+[2026-03-25T07:00:39.228Z] [Telegram Webhook] INFO: Query: ""Tell me about the Credit Card Risk Models project."" from Chat: 5250869899 (Bot: 91670030-b568-43b9-b74d-adf53a6aebc8)
+[2026-03-25T07:00:39.764Z] [Telegram Webhook] INFO: Starting context retrieval (Vector + SQL)
+[2026-03-25T07:00:43.378Z] [Telegram Webhook] INFO: Retrieval complete. Vector: 8088 chars, SQL: 187 chars
+[2026-03-25T07:00:43.488Z] [Telegram Webhook] INFO: Invoking AI model: gpt-4o-mini
+[2026-03-25T07:00:45.545Z] [Telegram Webhook] INFO: Sending response to Telegram API...
+[2026-03-25T07:00:45.899Z] [Telegram Webhook] INFO: Response successfully sent to Telegram.
+[2026-03-25T07:01:01.208Z] [Telegram Webhook] INFO: Query: "Where did Ajay go to college?"" from Chat: 5250869899 (Bot: 91670030-b568-43b9-b74d-adf53a6aebc8)
+[2026-03-25T07:01:01.814Z] [Telegram Webhook] INFO: Starting context retrieval (Vector + SQL)
+[2026-03-25T07:01:03.827Z] [Telegram Webhook] INFO: Retrieval complete. Vector: 6930 chars, SQL: 71 chars
+[2026-03-25T07:01:03.938Z] [Telegram Webhook] INFO: Invoking AI model: gpt-4o-mini
+[2026-03-25T07:01:05.870Z] [Telegram Webhook] INFO: Sending response to Telegram API...
+[2026-03-25T07:01:06.210Z] [Telegram Webhook] INFO: Response successfully sent to Telegram.
+[2026-03-25T07:03:08.241Z] [Telegram Webhook] INFO: Query: "what are the services you provide ?" from Chat: 5250869899 (Bot: 91670030-b568-43b9-b74d-adf53a6aebc8)
+[2026-03-25T07:03:08.691Z] [Telegram Webhook] INFO: Starting context retrieval (Vector + SQL)
+[2026-03-25T07:03:11.397Z] [Telegram Webhook] INFO: Retrieval complete. Vector: 6930 chars, SQL: 184 chars
+[2026-03-25T07:03:11.651Z] [Telegram Webhook] INFO: Invoking AI model: gpt-4o-mini
+[2026-03-25T07:03:13.536Z] [Telegram Webhook] INFO: Sending response to Telegram API...
+[2026-03-25T07:03:13.934Z] [Telegram Webhook] INFO: Response successfully sent to Telegram.
+[2026-03-25T07:25:47.534Z] [Telegram Webhook] INFO: Query: "what are the services you provide ?" from Chat: 5250869899 (Bot: 91670030-b568-43b9-b74d-adf53a6aebc8)
+[2026-03-25T07:25:48.533Z] [Telegram Webhook] INFO: Starting context retrieval (Vector + SQL)
+[2026-03-25T07:25:50.401Z] [Telegram Webhook] INFO: Retrieval complete. Vector: 6930 chars, SQL: 162 chars
+[2026-03-25T07:25:50.689Z] [Telegram Webhook] INFO: Invoking AI model: gpt-4o-mini
+[2026-03-25T07:25:52.732Z] [Telegram Webhook] INFO: Sending response to Telegram API...
+[2026-03-25T07:25:53.148Z] [Telegram Webhook] INFO: Response successfully sent to Telegram.
+[2026-03-25T07:26:17.045Z] [Telegram Webhook] INFO: Query: "what context data you have with you ?" from Chat: 5250869899 (Bot: 91670030-b568-43b9-b74d-adf53a6aebc8)
+[2026-03-25T07:26:17.258Z] [Telegram Webhook] INFO: Starting context retrieval (Vector + SQL)
+[2026-03-25T07:26:21.728Z] [Telegram Webhook] INFO: Retrieval complete. Vector: 8088 chars, SQL: 771 chars
+[2026-03-25T07:26:22.316Z] [Telegram Webhook] INFO: Invoking AI model: gpt-4o-mini
+[2026-03-25T07:26:24.581Z] [Telegram Webhook] INFO: Sending response to Telegram API...
+[2026-03-25T07:26:24.930Z] [Telegram Webhook] INFO: Response successfully sent to Telegram.
+[2026-03-25T07:27:05.057Z] [Telegram Webhook] INFO: Query: "when i say you, i am asking about the business or the business owner 
+remember this" from Chat: 5250869899 (Bot: 91670030-b568-43b9-b74d-adf53a6aebc8)
+[2026-03-25T07:27:05.598Z] [Telegram Webhook] INFO: Starting context retrieval (Vector + SQL)
+[2026-03-25T07:27:08.330Z] [Telegram Webhook] INFO: Retrieval complete. Vector: 27 chars, SQL: 447 chars
+[2026-03-25T07:27:08.533Z] [Telegram Webhook] INFO: Invoking AI model: gpt-4o-mini
+[2026-03-25T07:27:11.242Z] [Telegram Webhook] INFO: Sending response to Telegram API...
+[2026-03-25T07:27:11.576Z] [Telegram Webhook] INFO: Response successfully sent to Telegram.
+[2026-03-25T07:27:23.350Z] [Telegram Webhook] INFO: Query: "what are the services ajay provide" from Chat: 5250869899 (Bot: 91670030-b568-43b9-b74d-adf53a6aebc8)
+[2026-03-25T07:27:23.491Z] [Telegram Webhook] INFO: Starting context retrieval (Vector + SQL)
+[2026-03-25T07:27:25.261Z] [Telegram Webhook] INFO: Retrieval complete. Vector: 8117 chars, SQL: 181 chars
+[2026-03-25T07:27:25.498Z] [Telegram Webhook] INFO: Invoking AI model: gpt-4o-mini
+[2026-03-25T07:27:27.034Z] [Telegram Webhook] INFO: Sending response to Telegram API...
+[2026-03-25T07:27:27.412Z] [Telegram Webhook] INFO: Response successfully sent to Telegram.
+[2026-03-25T07:27:49.377Z] [Telegram Webhook] INFO: Query: "tell me about the experience then ?" from Chat: 5250869899 (Bot: 91670030-b568-43b9-b74d-adf53a6aebc8)
+[2026-03-25T07:27:49.727Z] [Telegram Webhook] INFO: Starting context retrieval (Vector + SQL)
+[2026-03-25T07:27:51.581Z] [Telegram Webhook] INFO: Retrieval complete. Vector: 6930 chars, SQL: 205 chars
+[2026-03-25T07:27:51.793Z] [Telegram Webhook] INFO: Invoking AI model: gpt-4o-mini
+[2026-03-25T07:27:55.664Z] [Telegram Webhook] INFO: Sending response to Telegram API...
+[2026-03-25T07:27:56.053Z] [Telegram Webhook] INFO: Response successfully sent to Telegram.
+[2026-03-25T07:28:09.901Z] [Telegram Webhook] INFO: Query: "what is the contact number" from Chat: 5250869899 (Bot: 91670030-b568-43b9-b74d-adf53a6aebc8)
+[2026-03-25T07:28:10.043Z] [Telegram Webhook] INFO: Starting context retrieval (Vector + SQL)
+[2026-03-25T07:28:11.912Z] [Telegram Webhook] INFO: Retrieval complete. Vector: 0 chars, SQL: 139 chars
+[2026-03-25T07:28:12.159Z] [Telegram Webhook] INFO: Invoking AI model: gpt-4o-mini
+[2026-03-25T07:28:14.500Z] [Telegram Webhook] INFO: Sending response to Telegram API...
+[2026-03-25T07:28:14.978Z] [Telegram Webhook] INFO: Response successfully sent to Telegram.
+[2026-03-25T07:28:28.409Z] [Telegram Webhook] INFO: Query: "tell me ajay's email" from Chat: 5250869899 (Bot: 91670030-b568-43b9-b74d-adf53a6aebc8)
+[2026-03-25T07:28:28.794Z] [Telegram Webhook] INFO: Starting context retrieval (Vector + SQL)
+[2026-03-25T07:28:30.263Z] [Telegram Webhook] INFO: Retrieval complete. Vector: 6930 chars, SQL: 94 chars
+[2026-03-25T07:28:30.467Z] [Telegram Webhook] INFO: Invoking AI model: gpt-4o-mini
+[2026-03-25T07:28:32.377Z] [Telegram Webhook] INFO: Sending response to Telegram API...
+[2026-03-25T07:28:32.758Z] [Telegram Webhook] INFO: Response successfully sent to Telegram.

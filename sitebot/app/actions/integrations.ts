@@ -105,6 +105,24 @@ export async function upsertIntegration(
     }
 
     if (result.error) return { integration: null, error: result.error.message }
+
+    // Telegram-specific: Register webhook with Telegram API
+    if (platform === 'telegram' && enabled && config.bot_token) {
+        try {
+            const telegramSetWebhookUrl = `https://api.telegram.org/bot${config.bot_token}/setWebhook?url=${encodeURIComponent(webhookUrl)}`
+            const tgRes = await fetch(telegramSetWebhookUrl)
+            const tgData = await tgRes.json()
+            if (!tgData.ok) {
+                console.error('[Telegram] Failed to set webhook:', tgData.description)
+                // We still save the integration, but log the error
+            } else {
+                console.log('[Telegram] Webhook registered successfully:', webhookUrl)
+            }
+        } catch (e) {
+            console.error('[Telegram] Webhook registration error:', e)
+        }
+    }
+
     return { integration: result.data as Integration, error: null }
 }
 
