@@ -1,18 +1,11 @@
 services:
   sitebot:
-    build:
-      context: ../sitebot
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+    image: ghcr.io/arakhajay/sitebot:latest
     container_name: sitebot
     restart: unless-stopped
     env_file:
       - .env
     environment:
-      # Next.js listens on 3000 inside container
       - PORT=3000
     expose:
       - "3000"
